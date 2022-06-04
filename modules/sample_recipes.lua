@@ -1,0 +1,10 @@
+function define_sample_recipes()
+    api_log("sr", "defining tabs ...")
+    cw_define_tab()
+    cw_define_tab()
+    api_log("sr", "defining recipes ...")
+    cw_define_recipe({{"log", 5}}, "stone", 2, 1)
+    cw_define_recipe({{"glue", 2}, {"stone", 15}}, "canister1", 1, 1)
+    cw_define_recipe({{"log", 1}}, "log", 2, 2)
+    api_log("sr", "done !")
+end

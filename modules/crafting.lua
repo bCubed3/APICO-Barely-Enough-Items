@@ -35,29 +35,28 @@ function cw_define_tab()
 	table.insert(COMPAT_WORKBENCH_RECIPE_INDEX, {})
 end
 
-function prep_deco_workbench()
-	SLOT_SPR = api_define_sprite("cw_item_slot", "sprites/crafting/cw_item_slot.png", 2)
-	RECIPE_SPR = api_define_sprite("cw_recipe_slot", "sprites/crafting/cw_recipe_slot.png", 1)
-	ARROW_SPR = api_define_sprite("cw_arrow", "sprites/crafting/cw_arrow.png", 1)
-	PLUS_SPR = api_define_sprite("cw_plus", "sprites/crafting/cw_plus.png", 1)
-	CAN_CRAFT_SPR = api_define_sprite("cw_craft", "sprites/crafting/cw_craft.png", 2)
-	CANT_CRAFT_SPR = api_define_sprite("cw_craft_error", "sprites/crafting/cw_craft_error.png", 2)
-	TABS_SPR[1] = api_define_sprite("cw_tab_1", "sprites/crafting/cw_tab_1.png", 2)
-	TABS_SELECTED_SPR[1] = api_define_sprite("cw_tab_1_s", "sprites/crafting/cw_tab_1_selected.png", 2)
-	TABS_SPR[2] = api_define_sprite("cw_tab_2", "sprites/crafting/cw_tab_2.png", 2)
-	TABS_SELECTED_SPR[2] = api_define_sprite("cw_tab_2_s", "sprites/crafting/cw_tab_2_selected.png", 2)
-	WHITE_NUMBERS_SPR = api_define_sprite("white_numbers_sprite", "sprites/crafting/white_numbers.png", 13)
-	RED_NUMBERS_SPR = api_define_sprite("red_numbers_sprite", "sprites/crafting/red_numbers.png", 13)
+function prep_compat_workbench()
+	SLOT_SPR = api_define_sprite("cw_item_slot", "sprites/cw_item_slot.png", 2)
+	RECIPE_SPR = api_define_sprite("cw_recipe_slot", "sprites/cw_recipe_slot.png", 1)
+	ARROW_SPR = api_define_sprite("cw_arrow", "sprites/cw_arrow.png", 1)
+	PLUS_SPR = api_define_sprite("cw_plus", "sprites/cw_plus.png", 1)
+	CAN_CRAFT_SPR = api_define_sprite("cw_craft", "sprites/cw_craft.png", 2)
+	CANT_CRAFT_SPR = api_define_sprite("cw_craft_error", "sprites/cw_craft_error.png", 2)
+	TABS_SPR[1] = api_define_sprite("cw_tab_1", "sprites/cw_tab_1.png", 2)
+	TABS_SELECTED_SPR[1] = api_define_sprite("cw_tab_1_s", "sprites/cw_tab_1_selected.png", 2)
+	TABS_SPR[2] = api_define_sprite("cw_tab_2", "sprites/cw_tab_2.png", 2)
+	TABS_SELECTED_SPR[2] = api_define_sprite("cw_tab_2_s", "sprites/cw_tab_2_selected.png", 2)
+	WHITE_NUMBERS_SPR = api_define_sprite("white_numbers_sprite", "sprites/white_numbers.png", 13)
+	RED_NUMBERS_SPR = api_define_sprite("red_numbers_sprite", "sprites/red_numbers.png", 13)
 end
 
-function define_deco_workbench()
-	prep_deco_workbench()
+function define_compat_workbench()
+	prep_compat_workbench()
     api_define_menu_object({
-        id = "decoration_workbench",
-        name = "Decoration Workbench",
+        id = "compat_workbench",
+        name = "Compatibility Workbench",
         category = "Crafting",
-        tooltip = "Used for crafting items from the Community Decorations mod.",
-        shop_key = false,
+        tooltip = "Used for crafting items from various Apico mods.",
         shop_buy = 0,
         shop_sell = 0,
         layout = {},
@@ -65,14 +64,16 @@ function define_deco_workbench()
         info = {},
         tools = {"mouse1", "hammer1"},
     	placeable = true
-    }, "sprites/crafting/decoration_workbench.png", "sprites/crafting/decoration_workbench_gui.png", {
-        define = "deco_workbench_define",
-		draw = "deco_workbench_draw"
-		--tick = "deco_workbench_tick"
-    }, nil)
+    }, "sprites/compat_workbench.png", "sprites/compat_workbench_gui.png", {
+        define = "compat_workbench_define",
+		draw = "compat_workbench_draw"
+		--tick = "compat_workbench_tick"
+    })
+	api_log("crafting", "object defined")
 end
 
-function deco_workbench_define(menu_id)
+function compat_workbench_define(menu_id)
+	api_log("crafting", "propertie")
 	api_dp(menu_id, "tab", 1)
 	api_dp(menu_id, "selected_item", nil)
 	api_dp(menu_id, "selected_recipe", nil)
@@ -84,10 +85,10 @@ function deco_workbench_define(menu_id)
 	api_dp(menu_id, "craft_amount", 1)
 
 	-- tabs
-	api_define_button(menu_id, "tab1", 6, 16, "1", "cw_tab_click", "sprites/crafting/cw_tab_1_selected.png")
-	api_define_button(menu_id, "tab2", 27, 16, "2", "cw_tab_click", "sprites/crafting/cw_tab_2.png")
+	api_define_button(menu_id, "tab1", 6, 16, "1", "cw_tab_click", "sprites/cw_tab_1_selected.png")
+	api_define_button(menu_id, "tab2", 27, 16, "2", "cw_tab_click", "sprites/cw_tab_2.png")
 	for i=1,10 do
-		api_define_button(menu_id, "recipe" .. i, 8 + 21 * (i - 1), 30, "", "cw_recipe_click", "sprites/crafting/cw_slot.png")
+		api_define_button(menu_id, "recipe" .. i, 8 + 21 * (i - 1), 30, "", "cw_recipe_click", "sprites/cw_slot.png")
 	end
 	api_log("dw", "defining tab 1 recipes ...")
 	tab = api_gp(menu_id, "tab")
@@ -95,32 +96,32 @@ function deco_workbench_define(menu_id)
 		api_sp(api_gp(menu_id, "recipe" .. i), "text", COMPAT_WORKBENCH_RECIPES[tab][i][2][1])
 	end
 	api_log("dw", "defining other buttons ...")
-	api_define_button(menu_id, "decrease_results", 113, 92, "decrease_results", "cw_decrease_results", "sprites/crafting/cw_result_minus.png")
-	api_define_button(menu_id, "increase_results", 164, 92, "increase_results", "cw_increase_results", "sprites/crafting/cw_result_plus.png")
-	api_define_button(menu_id, "craft_button", 182, 92, "Craft!", "cw_craft_click", "sprites/crafting/cw_craft.png")
-	api_define_button(menu_id, "craft_amount_display", 131, 92, "1", "cw_do_nothing", "sprites/crafting/cw_craft_amount.png")
+	api_define_button(menu_id, "decrease_results", 113, 92, "decrease_results", "cw_decrease_results", "sprites/cw_result_minus.png")
+	api_define_button(menu_id, "increase_results", 164, 92, "increase_results", "cw_increase_results", "sprites/cw_result_plus.png")
+	api_define_button(menu_id, "craft_button", 182, 92, "Craft!", "cw_craft_click", "sprites/cw_craft.png")
+	api_define_button(menu_id, "craft_amount_display", 131, 92, "1", "cw_do_nothing", "sprites/cw_craft_amount.png")
 end
 
-function deco_workbench_draw(menu_id)
+function compat_workbench_draw(menu_id)
 	cam = api_get_cam()
-	--api_log("dw", "drawing tabs ...")
+	--api_log("cw", "drawing tabs ...")
 	api_draw_button(api_gp(menu_id, "tab1"), false)
 	api_draw_button(api_gp(menu_id, "tab2"), false)
-	--api_log("dw", "drawing other buttons ...")
+	--api_log("cw", "drawing other buttons ...")
 	api_draw_button(api_gp(menu_id, "decrease_results"), false)
 	api_draw_button(api_gp(menu_id, "increase_results"), false)
 	api_draw_button(api_gp(menu_id, "craft_amount_display"), true)
 	-- the rest of this function draws the sprites to choose recipes
-	--api_log("dw", "finding tab ...")
+	--api_log("cw", "finding tab ...")
 	tab = api_gp(menu_id, "tab")
-	--api_log("dw", "drawing recipes ...")
+	--api_log("cw", "drawing recipes ...")
 	for i=1,#COMPAT_WORKBENCH_RECIPES[tab] do
 		recipe = api_gp(menu_id, "recipe" .. i)
 		recipe_oid = api_gp(recipe, "text")
 		api_draw_button(recipe, false)
 		api_draw_sprite(SPR_REF[recipe_oid], 0, api_gp(recipe, "x") - cam["x"], api_gp(recipe, "y") - cam["y"])
 	end
-	--api_log("dw", "drawing selected recipe ...")
+	--api_log("cw", "drawing selected recipe ...")
 	if api_gp(menu_id, "selected_item") ~= nil then
 		recipe = api_gp(menu_id, "selected_recipe")
 		recipe_length = #recipe[1]
