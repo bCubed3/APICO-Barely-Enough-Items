@@ -19,9 +19,9 @@ function define_sample_recipes()
     --                  tab : int,
     --                  mod : string)
     -- remember to prepend your mod_name if you are using modded items
-    cw_define_recipe({{"log", 5}}, "stone", 1, 1, "modCubed")
-    cw_define_recipe({{"stone", 5}, {"waterproof", 7}, {"planks2", 10}}, "glue", 2, 1, "modCubed")
-    cw_define_recipe({{"glue", 2}, {"stone", 15}}, "canister1", 1, 1, "foo")
-    cw_define_recipe({{"log", 1}}, "log", 2, 2, "modCubed")
+    cw_define_recipe({{item = "log", amount = 5}}, "stone", 1, 1, "modCubed")
+    cw_define_recipe({{item = "stone", amount = 5}, {item = "waterproof", amount = 7}, {item = "planks2", amount = 10}}, "glue", 2, 1, "modCubed")
+    cw_define_recipe({{item = "glue", amount= 2}, {item = "stone", amount = 15}}, "canister1", 1, 1, "foo")
+    cw_define_recipe({{item = "log", amount = 1}}, "log", 2, 2, "modCubed")
 end
 ```
