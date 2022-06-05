@@ -55,4 +55,32 @@ function define_sample_recipes()
     cw_define_recipe({{item = "planks2", amount = 15}, {item = "cog", amount = 5}, {item = "uncappingbench", amount = 1}}, "uncapper", 1, 3, "Vanilla")
     cw_define_recipe({{item = "planks2", amount = 10}, {item = "cog", amount = 10}, {item = "extractor", amount = 1}}, "centrifuge", 1, 3, "Vanilla")
     cw_define_recipe({{item = "sawdust1", amount = 2}, {item = "glue", amount = 1}}, "sawdust2", 2, 3, "Vanilla")
+    -- tab 4 recipes
+    for i=1,7 do
+        cw_define_recipe({{item = "planks1", amount = 1}}, "tile" .. i, 4, 4, "Vanilla")
+    end
+    for i=1,3 do
+        cw_define_recipe({{item = "sticks1", amount = 2}, {item = "planks1", amount = 1}}, "wall" .. i, 4, 4, "Vanilla")
+    end
+    cw_define_recipe({{item = "sticks1", amount = 2}, {item = "planks1", amount = 1}}, "wall6", 4, 4, "Vanilla")
+    cw_define_recipe({{item = "planks1", amount = 1}}, "pot1", 1, 4, "Vanilla")
+    cw_define_recipe({{item = "planks1", amount = 2}}, "pot2", 1, 4, "Vanilla")
+    cw_define_recipe({{item = "planks1", amount = 1}, {item = "water", amount = 1}}, "pot3", 4, 4, "Vanilla")
+    cw_define_recipe({{item = "planks1", amount = 2}, {item = "glue", amount = 2}, {item = "beeswax", amount = 5}}, "light1", 1, 4, "Vanilla")
+    --cw_define_recipe({{item = "planks2", amount = 5}, {item = "glue", amount = 5}, {item = "beeswax", amount = 10}}, "light2", 1, 4, "Vanilla")
+    cw_define_recipe({{item = "flower8", amount = 4}, {item = "water", amount = 1}}, "light3", 1, 4, "Vanilla")
+    -- tab 5 recipes
+    cw_define_recipe({{item = "sticks1", amount = 5}, {item = "planks1", amount = 5}}, "paintbrush", 1, 5, "Vanilla")
+    cw_define_recipe({{item = "sticks1", amount = 5}, {item = "stone", amount = 5}}, "scraper", 1, 5, "Vanilla")
+    cw_define_recipe({{item = "paintbrush", amount = 1}, {item = "plnaks1", amount = 10}, {item = "dye1", amount = 10}}, "dyestation", 1, 5, "Vanilla")
+    for i=1,5 do
+        cw_define_recipe({{item = "flower" .. i, amount = 1}, {item = "glue", amount = 1}}, "dye" .. i, 8, 5, "Vanilla")
+    end
+    for i=7,8 do
+        cw_define_recipe({{item = "flower" .. i, amount = 1}, {item = "glue", amount = 1}}, "dye" .. i, 8, 5, "Vanilla")
+    end
+    for i=12,16 do
+        cw_define_recipe({{item = "flower" .. i, amount = 1}, {item = "glue", amount = 1}}, "dye" .. i, 8, 5, "Vanilla")
+    end
+    cw_define_recipe({{item = "flower6", amount = 1}, {item = "glue", amount = 1}}, "dye6", 8, 5, "Vanilla")
 end
