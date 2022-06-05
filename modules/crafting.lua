@@ -34,21 +34,24 @@ function cw_define_recipe(input_table, output, num, tab, mod)
 	SPR_REF[output] = api_get_sprite("sp_" .. output)
 end
 
-function cw_define_tabs(mod, num)
-	for i=1, num do
-		table.insert(COMPAT_WORKBENCH_RECIPES[mod], {})
-		table.insert(COMPAT_WORKBENCH_RECIPE_INDEX[mod], {})
-	end
-end
-
-function cw_define_mod(mod)
+function cw_define_mod(mod, tabs_num)
 	COMPAT_WORKBENCH_RECIPES[mod] = {}
 	COMPAT_WORKBENCH_RECIPE_INDEX[mod] = {}
 	table.insert(COMPAT_WORKBENCH_MODS, mod)
 	if MODS_TO_SHOW < 4 then
 		MODS_TO_SHOW = MODS_TO_SHOW + 1
 	end
+	cw_define_tabs(mod, tabs_num)
 end
+
+function cw_define_tabs(mod, num)
+	for i=1, num do
+		api_log("added tab", i)
+		table.insert(COMPAT_WORKBENCH_RECIPES[mod], {})
+		table.insert(COMPAT_WORKBENCH_RECIPE_INDEX[mod], {})
+	end
+end
+
 
 function prep_compat_workbench()
 	SLOT_SPR = api_define_sprite("cw_item_slot", "sprites/cw_item_slot.png", 2)
@@ -84,12 +87,16 @@ function define_compat_workbench()
 		draw = "compat_workbench_draw"
 		--tick = "compat_workbench_tick"
     })
-	--api_log("crafting", "object defined")
+	v_recipe = {{item = "log", amount = 10}}
+	api_define_recipe("crafting", MOD_NAME .. "_compat_workbench", v_recipe, 1)
+    cw_define_mod("CompatWB", 1)
+    cw_define_recipe({{"log", 10}}, MOD_NAME .. "_compat_workbench", 1, 1, "CompatWB")
+	
 end
 
 function compat_workbench_define(menu_id)
 	--api_log("crafting", "propertie")
-	api_dp(menu_id, "selected_mod", "modCubed")
+	api_dp(menu_id, "selected_mod", COMPAT_WORKBENCH_MODS[1])
 	api_dp(menu_id, "tab", 1)
 	api_dp(menu_id, "selected_item", nil)
 	api_dp(menu_id, "selected_recipe", nil)
@@ -112,10 +119,6 @@ function compat_workbench_define(menu_id)
 	--api_log("dw", "defining tab 1 recipes ...")
 	tab = api_gp(menu_id, "tab")
 	mod = api_gp(menu_id, "selected_mod")
-	for i=1,#COMPAT_WORKBENCH_RECIPES[mod][tab] do
-		api_sp(api_gp(menu_id, "recipe" .. i), "text", COMPAT_WORKBENCH_RECIPES[mod][tab][i][2][1])
-	end
-	--api_log("dw", "defining other buttons ...")
 	api_define_button(menu_id, "decrease_results", 113 + 65, 92, "decrease_results", "cw_decrease_results", "sprites/cw_result_minus.png")
 	api_define_button(menu_id, "increase_results", 164 + 65, 92, "increase_results", "cw_increase_results", "sprites/cw_result_plus.png")
 	api_define_button(menu_id, "craft_button", 182 + 65, 92, "Craft!", "cw_craft_click", "sprites/cw_craft.png")
@@ -297,20 +300,23 @@ function cw_craft_click(menu_id)
 	
 end
 
-function cw_recipe_click(menu_id)
-	button_id = api_get_highlighted("ui")
+function cw_recipe_click(menu_id, button_id)
 	mod = api_gp(menu_id, "selected_mod")
 	tab = api_gp(menu_id, "tab")
-	--api_log("recipe_click", COMPAT_WORKBENCH_RECIPE_INDEX[mod][tab][api_gp(button_id, "text")])
-	api_sp(menu_id, "selected_item", api_gp(button_id, "text"))
-	api_sp(menu_id, "selected_recipe", COMPAT_WORKBENCH_RECIPES[mod][tab][COMPAT_WORKBENCH_RECIPE_INDEX[mod][tab][api_gp(button_id, "text")]])
+	new_out = api_gp(button_id, "text")
+	if new_out ~= "" then
+		api_sp(menu_id, "selected_item", api_gp(button_id, "text"))
+		api_sp(menu_id, "selected_recipe", COMPAT_WORKBENCH_RECIPES[mod][tab][COMPAT_WORKBENCH_RECIPE_INDEX[mod][tab][new_out]])
+	end
 
 end
 
 function cw_tab_click(menu_id, button_id)
-	button_id = api_get_highlighted("ui")
 	tab = tonumber(api_gp(button_id, "text"))
-	set_tab(menu_id, tab)
+	mod = api_gp(menu_id, "selected_mod")
+	if tab <= #COMPAT_WORKBENCH_RECIPES[mod] then
+		set_tab(menu_id, tab)
+	end
 end
 
 function set_tab(menu_id, tab)

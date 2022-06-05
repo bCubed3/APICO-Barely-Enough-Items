@@ -9,7 +9,7 @@ function register()
 end
 
 function init()
-    define_compat_workbench()
     
+    define_compat_workbench()
     return "Success"
 end
