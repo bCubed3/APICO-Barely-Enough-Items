@@ -24,8 +24,12 @@ TEMPLATE :
 cw_define_recipe({{"item1", 1}, {"item2", 3}}, "output_item", 3)
 
 ]]--
-function cw_define_recipe(input_table, output, num, tab, mod)
+function cw_define_recipe(input_recipe, output, num, tab, mod)
 	--COMPAT_WORKBENCH_RECIPES[tab][#COMPAT_WORKBENCH_RECIPES[tab]+1] = {input_table, {output, num}}
+	input_table = {}
+	for i=1,#input_recipe do
+		input_table[i] = {input_recipe[i]["item"], input_recipe[i]["amount"]}
+	end
 	table.insert(COMPAT_WORKBENCH_RECIPES[mod][tab], {input_table, {output, num}})
 	COMPAT_WORKBENCH_RECIPE_INDEX[mod][tab][output] = #COMPAT_WORKBENCH_RECIPES[mod][tab]
 	for i=1,#input_table do
@@ -90,7 +94,7 @@ function define_compat_workbench()
 	v_recipe = {{item = "log", amount = 10}}
 	api_define_recipe("crafting", MOD_NAME .. "_compat_workbench", v_recipe, 1)
     cw_define_mod("CompatWB", 1)
-    cw_define_recipe({{"log", 10}}, MOD_NAME .. "_compat_workbench", 1, 1, "CompatWB")
+    cw_define_recipe({{item = "log", amount = 10}}, MOD_NAME .. "_compat_workbench", 1, 1, "CompatWB")
 	
 end
 
