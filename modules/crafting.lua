@@ -91,10 +91,10 @@ function define_compat_workbench()
 		draw = "compat_workbench_draw"
 		--tick = "compat_workbench_tick"
     })
-	v_recipe = {{item = "log", amount = 10}}
+	v_recipe = {{item = "log", amount = 10}, {item = "planks1", amount = 5}}
 	api_define_recipe("crafting", MOD_NAME .. "_compat_workbench", v_recipe, 1)
     cw_define_mod("CompatWB", 1)
-    cw_define_recipe({{item = "log", amount = 10}}, MOD_NAME .. "_compat_workbench", 1, 1, "CompatWB")
+    cw_define_recipe(v_recipe, MOD_NAME .. "_compat_workbench", 1, 1, "CompatWB")
 	
 end
 
