@@ -10,10 +10,10 @@ Example code :
 -- function that defines example recipes
 function define_sample_recipes()
     -- define your mod with cw_define_mod(mod_name : string, tabs_num : int)
-    cw_define_mod("modCubed")
-    cw_define_mod("foo")
+    cw_define_mod("modCubed", 2)
+    cw_define_mod("foo", 5)
     -- define recipes with :
-    -- cw_define_recipe({{item1 : string, amt1 : int}, {item2 : string, amt2 : int}, {item3 : string, amt3 : int} or nil},
+    -- cw_define_recipe({{item = "item1", amount = amt1}, {item = "item2", amount = amt2}, {item = "item3", amount = amt3}},
     --                  output_item : string,
     --                  output_amt : int,
     --                  tab : int,
