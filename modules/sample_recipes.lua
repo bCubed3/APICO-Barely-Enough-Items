@@ -67,12 +67,12 @@ function define_sample_recipes()
     cw_define_recipe({{item = "planks1", amount = 2}}, "pot2", 1, 4, "Vanilla")
     cw_define_recipe({{item = "planks1", amount = 1}, {item = "water", amount = 1}}, "pot3", 4, 4, "Vanilla")
     cw_define_recipe({{item = "planks1", amount = 2}, {item = "glue", amount = 2}, {item = "beeswax", amount = 5}}, "light1", 1, 4, "Vanilla")
-    --cw_define_recipe({{item = "planks2", amount = 5}, {item = "glue", amount = 5}, {item = "beeswax", amount = 10}}, "light2", 1, 4, "Vanilla")
+    cw_define_recipe({{item = "planks2", amount = 5}, {item = "glue", amount = 5}, {item = "beeswax", amount = 10}}, "light2", 1, 4, "Vanilla")
     cw_define_recipe({{item = "flower8", amount = 4}, {item = "water", amount = 1}}, "light3", 1, 4, "Vanilla")
     -- tab 5 recipes
     cw_define_recipe({{item = "sticks1", amount = 5}, {item = "planks1", amount = 5}}, "paintbrush", 1, 5, "Vanilla")
     cw_define_recipe({{item = "sticks1", amount = 5}, {item = "stone", amount = 5}}, "scraper", 1, 5, "Vanilla")
-    cw_define_recipe({{item = "paintbrush", amount = 1}, {item = "plnaks1", amount = 10}, {item = "dye1", amount = 10}}, "dyestation", 1, 5, "Vanilla")
+    cw_define_recipe({{item = "paintbrush", amount = 1}, {item = "planks1", amount = 10}, {item = "dye1", amount = 10}}, "dyestation", 1, 5, "Vanilla")
     for i=1,5 do
         cw_define_recipe({{item = "flower" .. i, amount = 1}, {item = "glue", amount = 1}}, "dye" .. i, 8, 5, "Vanilla")
     end
@@ -80,7 +80,7 @@ function define_sample_recipes()
         cw_define_recipe({{item = "flower" .. i, amount = 1}, {item = "glue", amount = 1}}, "dye" .. i, 8, 5, "Vanilla")
     end
     for i=12,16 do
-        cw_define_recipe({{item = "flower" .. i, amount = 1}, {item = "glue", amount = 1}}, "dye" .. i, 8, 5, "Vanilla")
+        --cw_define_recipe({{item = "flower" .. i, amount = 1}, {item = "glue", amount = 1}}, "dye" .. i, 8, 5, "Vanilla")
     end
     cw_define_recipe({{item = "flower6", amount = 1}, {item = "glue", amount = 1}}, "dye6", 8, 5, "Vanilla")
 end

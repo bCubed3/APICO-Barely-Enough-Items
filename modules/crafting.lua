@@ -13,6 +13,9 @@ CAN_CRAFT_SPR = -1
 CANT_CRAFT_SPR = -1
 WHITE_NUMBERS_SPR = -1
 RED_NUMBERS_SPR = -1
+TOOLTIP_EDGE_SPR = -1
+TOOLTIP_CENTER_SPR = -1
+TOOLTIP_EDGE_OFFSET = 3
 SPR_REF = {}
 X_OFFSET = 60
 Y_OFFSET = 60
@@ -33,9 +36,9 @@ function cw_define_recipe(input_recipe, output, num, tab, mod)
 	table.insert(COMPAT_WORKBENCH_RECIPES[mod][tab], {input_table, {output, num}})
 	COMPAT_WORKBENCH_RECIPE_INDEX[mod][tab][output] = #COMPAT_WORKBENCH_RECIPES[mod][tab]
 	for i=1,#input_table do
-		SPR_REF[input_table[i][1]] = api_get_sprite("sp_" .. input_table[i][1])
+		SPR_REF[input_table[i][1]] = get_item_sprite(input_table[i][1])
 	end
-	SPR_REF[output] = api_get_sprite("sp_" .. output)
+	SPR_REF[output] = get_item_sprite(output)
 end
 
 function cw_define_mod(mod, tabs_num)
@@ -70,6 +73,8 @@ function prep_compat_workbench()
 	end
 	WHITE_NUMBERS_SPR = api_define_sprite("white_numbers_sprite", "sprites/white_numbers.png", 13)
 	RED_NUMBERS_SPR = api_define_sprite("red_numbers_sprite", "sprites/red_numbers.png", 13)
+	TOOLTIP_EDGE_SPR = api_define_sprite("cw_tooltip_edge", "sprites/cw_tooltip_edge.png", 1)
+	TOOLTIP_CENTER_SPR = api_define_sprite("cw_tooltip_center", "sprites/cw_tooltip_center.png", 1)
 end
 
 function define_compat_workbench()
@@ -119,6 +124,7 @@ function compat_workbench_define(menu_id)
 	end
 	for i=1,20 do
 		api_define_button(menu_id, "recipe" .. i, 65 + 8 + 21 * ((i - 1) % 5), 30 + 21 * ((i - 1) // 5), "", "cw_recipe_click", "sprites/cw_slot.png")
+		api_sp(api_gp(menu_id, "recipe" .. i), "index", 1)
 	end
 	--api_log("dw", "defining tab 1 recipes ...")
 	tab = api_gp(menu_id, "tab")
@@ -133,6 +139,7 @@ function compat_workbench_define(menu_id)
 		api_define_button(menu_id, "mod_button_" .. i, 5, 12 + 17 * i, COMPAT_WORKBENCH_MODS[i], "cw_set_mod", "sprites/mod_button.png")
 	end
 	--api_log("compat_workbench", "workbench definition complete")
+	set_tab(menu_id, 1)
 end
 
 function compat_workbench_draw(menu_id)
@@ -151,7 +158,7 @@ function compat_workbench_draw(menu_id)
 	for i=1,MODS_TO_SHOW do
 		api_draw_button(api_gp(menu_id, "mod_button_" .. i), true)
 	end
-	-- the rest of this function draws the sprites to choose recipes
+	-- draw the sprites to choose recipes
 	--api_log("cw", "finding tab ...")
 	tab = api_gp(menu_id, "tab")
 	--api_log("cw", "drawing recipes ...")
@@ -162,6 +169,7 @@ function compat_workbench_draw(menu_id)
 		api_draw_button(recipe, false)
 		api_draw_sprite(SPR_REF[recipe_oid], 0, api_gp(recipe, "x") - cam["x"], api_gp(recipe, "y") - cam["y"])
 	end
+	-- draw the selected recipe
 	--api_log("cw", "drawing selected recipe ...")
 	if api_gp(menu_id, "selected_item") ~= nil then
 		recipe = api_gp(menu_id, "selected_recipe")
@@ -175,6 +183,84 @@ function compat_workbench_draw(menu_id)
 		oy = api_gp(menu_id, "y") - cam["y"]
 		amt = api_gp(menu_id, "craft_amount")
 		draw_recipe(menu_id, ox	, oy, amt)
+	end
+	-- draw tooltip
+	--api_log("tooltip", "drawing tooltip ...")
+	draw_hovered_recipe_tooltip(menu_id)
+end
+
+function draw_hovered_recipe_tooltip(menu_id)
+	hl_menu = api_get_highlighted("menu")
+	if hl_menu == menu_id then
+		hl_button = api_get_highlighted("ui")
+		if hl_button ~= nil then
+			recipe = api_gp(hl_button, "text")
+			if api_gp(hl_button, "index") == 1 and recipe ~= nil then
+				draw_tooltip(recipe, menu_id)
+			end
+		end
+	end
+end
+
+function get_item_sprite(oid)
+	def = api_get_definition(oid)
+	spr = nil
+	if def ~= nil then
+		if def["item_sprite"] ~= nil then
+			spr = def["item_sprite"]
+		else
+			spr = api_get_sprite(oid)
+		end
+	else
+		api_log("compat_workbench", "Error, " .. oid .. " is not defined.")
+	end
+	return spr
+end
+
+function draw_tooltip(oid, menu_id)
+	idef = api_get_definition(oid)
+	name = idef["name"]
+	holding_shift = api_get_key_down("SHFT")
+	tooltip = "Hold shift for info."
+	tooltip_size = {x = 117, y = 28}
+	if holding_shift == 1 then
+		tooltip = idef["tooltip"]
+		tooltip_size["x"] = 171
+	end
+	spacing = 13
+	space_nums = {0, 0}
+	cam = api_get_cam()
+	size = api_get_game_size()
+	
+	if #name * 6 + 1 > tooltip_size["x"] then
+		space_nums[1] = ((#name * 6 + 4) // tooltip_size["x"])
+		tooltip_size["y"] = tooltip_size["y"] + spacing * space_nums[1]
+	end
+	if holding_shift == 1 then
+		space_nums[1] = space_nums[1] + 2
+		tooltip_size["y"] = tooltip_size["y"] + spacing * 2
+		if #tooltip * 6 + 1 > tooltip_size["x"] then
+			space_nums[2] = ((#tooltip * 6 + 4) // tooltip_size["x"])
+			tooltip_size["y"] = tooltip_size["y"] + spacing * space_nums[2]
+		end
+		
+	end
+	left = size["width"] - tooltip_size["x"] - TOOLTIP_EDGE_OFFSET
+	top = size["height"] - tooltip_size["y"] - TOOLTIP_EDGE_OFFSET
+	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left, top - 1, tooltip_size["x"], 1, 0, 1, 1)
+	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left, top + tooltip_size["y"], tooltip_size["x"], 1, 0, 1, 1)
+	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left - 1, top, 1, tooltip_size["y"], 0, 1, 1)
+	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left + tooltip_size["x"], top, 1, tooltip_size["y"], 0, 1, 1)
+	api_draw_sprite_ext(TOOLTIP_CENTER_SPR, 0, left, top, tooltip_size["x"], tooltip_size["y"], 0, 0, 0.9)
+	camera_pos = api_get_camera_position()
+	player_pos = api_get_player_position()
+	px = player_pos["x"] - camera_pos["x"]
+	py = player_pos["y"] - camera_pos["y"]
+	api_draw_text(left + 3, top + 2, name, false, "FONT_WHITE", tooltip_size["x"])
+	api_draw_text(left + 3, top + 2 + 13 + spacing * space_nums[1], tooltip, false, "FONT_BGREY", tooltip_size["x"])
+	if holding_shift == 1 then
+		api_draw_text(left + 3, top + 2 + spacing, "Mod : ".. api_gp(menu_id, "selected_mod"), false, "FONT_ORANGE", tooltip_size["x"])
+		api_draw_text(left + 3, top + 2 + spacing * 2, idef["category"], false, "FONT_BLUE", tooltip_size["x"])
 	end
 end
 
