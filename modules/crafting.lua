@@ -13,6 +13,7 @@ CAN_CRAFT_SPR = -1
 CANT_CRAFT_SPR = -1
 WHITE_NUMBERS_SPR = -1
 RED_NUMBERS_SPR = -1
+MOD_TOOLTIP_SPR = -1
 TOOLTIP_EDGE_SPR = -1
 TOOLTIP_CENTER_SPR = -1
 TOOLTIP_EDGE_OFFSET = 3
@@ -73,6 +74,7 @@ function prep_compat_workbench()
 	end
 	WHITE_NUMBERS_SPR = api_define_sprite("white_numbers_sprite", "sprites/white_numbers.png", 13)
 	RED_NUMBERS_SPR = api_define_sprite("red_numbers_sprite", "sprites/red_numbers.png", 13)
+	MOD_TOOLTIP_SPR = api_define_sprite("mod_tooltip", "sprites/cw_mod_tooltip.png", 1)
 	TOOLTIP_EDGE_SPR = api_define_sprite("cw_tooltip_edge", "sprites/cw_tooltip_edge.png", 1)
 	TOOLTIP_CENTER_SPR = api_define_sprite("cw_tooltip_center", "sprites/cw_tooltip_center.png", 1)
 end
@@ -195,8 +197,10 @@ function draw_hovered_recipe_tooltip(menu_id)
 		hl_button = api_get_highlighted("ui")
 		if hl_button ~= nil then
 			recipe = api_gp(hl_button, "text")
-			if api_gp(hl_button, "index") == 1 and recipe ~= nil then
-				draw_tooltip(recipe, menu_id)
+			if recipe ~= "" then
+				if api_gp(hl_button, "index") == 1 and recipe ~= nil then
+					draw_tooltip(recipe, menu_id)
+				end
 			end
 		end
 	end
@@ -218,6 +222,7 @@ function get_item_sprite(oid)
 end
 
 function draw_tooltip(oid, menu_id)
+	letter_size = 5.5
 	idef = api_get_definition(oid)
 	name = idef["name"]
 	holding_shift = api_get_key_down("SHFT")
@@ -232,18 +237,18 @@ function draw_tooltip(oid, menu_id)
 	cam = api_get_cam()
 	size = api_get_game_size()
 	
-	if #name * 6 + 1 > tooltip_size["x"] then
-		space_nums[1] = ((#name * 6 + 4) // tooltip_size["x"])
+	if #name * letter_size + 1 > tooltip_size["x"] then
+		space_nums[1] = ((#name * letter_size + 1) // tooltip_size["x"])
 		tooltip_size["y"] = tooltip_size["y"] + spacing * space_nums[1]
 	end
 	if holding_shift == 1 then
 		space_nums[1] = space_nums[1] + 2
 		tooltip_size["y"] = tooltip_size["y"] + spacing * 2
-		if #tooltip * 6 + 1 > tooltip_size["x"] then
-			space_nums[2] = ((#tooltip * 6 + 4) // tooltip_size["x"])
+		if #tooltip * letter_size + 1 > tooltip_size["x"] then
+			space_nums[2] = ((#tooltip * letter_size + 1) // tooltip_size["x"])
 			tooltip_size["y"] = tooltip_size["y"] + spacing * space_nums[2]
 		end
-		
+		api_log("size", (#tooltip * letter_size + 1) / 171)
 	end
 	left = size["width"] - tooltip_size["x"] - TOOLTIP_EDGE_OFFSET
 	top = size["height"] - tooltip_size["y"] - TOOLTIP_EDGE_OFFSET
@@ -257,11 +262,12 @@ function draw_tooltip(oid, menu_id)
 	px = player_pos["x"] - camera_pos["x"]
 	py = player_pos["y"] - camera_pos["y"]
 	api_draw_text(left + 3, top + 2, name, false, "FONT_WHITE", tooltip_size["x"])
-	api_draw_text(left + 3, top + 2 + 13 + spacing * space_nums[1], tooltip, false, "FONT_BGREY", tooltip_size["x"])
 	if holding_shift == 1 then
-		api_draw_text(left + 3, top + 2 + spacing, "Mod : ".. api_gp(menu_id, "selected_mod"), false, "FONT_ORANGE", tooltip_size["x"])
+		api_draw_sprite(MOD_TOOLTIP_SPR, 0, left + 3, top + 3 + spacing)
+		api_draw_text(left + 3 + 11, top + 2 + spacing, api_gp(menu_id, "selected_mod"), false, "FONT_ORANGE", tooltip_size["x"])
 		api_draw_text(left + 3, top + 2 + spacing * 2, idef["category"], false, "FONT_BLUE", tooltip_size["x"])
 	end
+	api_draw_text(left + 3, top + 2 + 13 + spacing * space_nums[1], tooltip, false, "FONT_BGREY", tooltip_size["x"])
 end
 
 function draw_recipe(menu_id, ox, oy, amt)
