@@ -1,6 +1,6 @@
 KEYCODES = {}
 LETTER_LENGTHS = {}
-LETTERS = "abcedfghijklmnopqrstuvwxyz ;"
+LETTERS = " 0123456789abcedfghijklmnopqrstuvwxyz;'@#"
 
 function make_keycodes()
     KEYCODES[8] = "BACKSPACE"
@@ -8,21 +8,34 @@ function make_keycodes()
     KEYCODES[32] = " "
     KEYCODES[37] = "LEFT"
     KEYCODES[39] = "RIGHT"
+    for i=48,57 do
+        KEYCODES[i] = string.char(i)
+    end
     for i=65,90 do
         KEYCODES[i] = string.char(i + 32)
     end
     KEYCODES[186] = ";"
+    KEYCODES[222] = "'"
+    KEYCODES[250] = "@"
+    KEYCODES[251] = "#"
+    for i=265,290 do
+        KEYCODES[i] = string.char(i - 200)
+    end
 end
 
 function make_letter_lengths()
     for i=1,#LETTERS do
         local letter = string.sub(LETTERS, i, i)
-        if letter == " " or letter == ";" then
+        if letter == "'" then
+            LETTER_LENGTHS[letter] = 1
+        elseif letter == " " or letter == ";" then
             LETTER_LENGTHS[letter] = 2
-        elseif letter == "i" or letter == "l" then
+        elseif letter == "i" or letter == "l" or letter == "1" or letter == "$" then
             LETTER_LENGTHS[letter] = 3
         elseif letter == "j" or letter == "k" then
             LETTER_LENGTHS[letter] = 4
+        elseif letter == "@" then
+            LETTER_LENGTHS[letter] = 9
         else
             LETTER_LENGTHS[letter] = 5
         end

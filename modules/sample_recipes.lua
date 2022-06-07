@@ -56,12 +56,16 @@ function define_sample_recipes()
     cw_define_recipe({{item = "planks2", amount = 10}, {item = "cog", amount = 10}, {item = "extractor", amount = 1}}, "centrifuge", 1, 3, "Vanilla")
     cw_define_recipe({{item = "sawdust1", amount = 2}, {item = "glue", amount = 1}}, "sawdust2", 2, 3, "Vanilla")
     -- tab 4 recipes
-    for i=1,7 do
+    for i=1,3 do
         cw_define_recipe({{item = "planks1", amount = 1}}, "tile" .. i, 4, 4, "Vanilla")
     end
-    for i=1,3 do
+    for i=4,6 do
+        cw_define_recipe({{item = "stone", amount = 1}}, "tile" .. i, 4, 4, "Vanilla")
+    end
+    for i=1,3,2 do
         cw_define_recipe({{item = "sticks1", amount = 2}, {item = "planks1", amount = 1}}, "wall" .. i, 4, 4, "Vanilla")
     end
+    cw_define_recipe({{item = "stone", amount = 1}}, "wall" .. 2, 4, 4, "Vanilla")
     cw_define_recipe({{item = "sticks1", amount = 2}, {item = "planks1", amount = 1}}, "wall6", 4, 4, "Vanilla")
     cw_define_recipe({{item = "planks1", amount = 1}}, "pot1", 1, 4, "Vanilla")
     cw_define_recipe({{item = "planks1", amount = 2}}, "pot2", 1, 4, "Vanilla")
@@ -83,4 +87,8 @@ function define_sample_recipes()
         --cw_define_recipe({{item = "flower" .. i, amount = 1}, {item = "glue", amount = 1}}, "dye" .. i, 8, 5, "Vanilla")
     end
     cw_define_recipe({{item = "flower6", amount = 1}, {item = "glue", amount = 1}}, "dye6", 8, 5, "Vanilla")
+
+    -- misc vanilla non-crafting-bench recipes
+    register_recipe("planks1", {{item = "log", amount = 1}}, 2, "Vanilla", "sawmill")
+    register_recipe("sticks1", {{item = "planks1", amount = 1}}, 2, "Vanilla", "sawmill")
 end

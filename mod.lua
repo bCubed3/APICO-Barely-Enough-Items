@@ -11,10 +11,11 @@ end
 
 function init()
     make_keycodes()
+    define_recipe_book()
     make_letter_lengths()
     define_sample_recipes()
     define_compat_workbench()
-    define_recipe_book()
+    
     --api_blacklist_input(MOD_NAME .. "_recipe_book")
     return "Success"
 end

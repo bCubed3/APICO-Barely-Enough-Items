@@ -36,10 +36,18 @@ function recipe_book_define(menu_id)
     api_dp(menu_id, "cursor_index", 0)
     api_dp(menu_id, "cursor_relative", 0)
     api_dp(menu_id, "display_start", 0)
+    api_dp(menu_id, "selected_item", nil)
     api_log("rb", "defining buttons ...")
     define_items_buttons(menu_id, 174, 25)
+    api_define_button(menu_id, "item_large", 334, 25, "", "cw_do_nothing", "sprites/recipe_book/rb_slot_large.png")
+    for i=1,3 do
+        api_define_button(menu_id, "recipe_item" .. i, 382 + (i - 1) * 23, 25, "", "item_click", "sprites/recipe_book/rb_slot.png")
+        api_sp(api_gp(menu_id, "recipe_item" .. i), "index", 1)
+    end
+    api_define_button(menu_id, "crafting_bench", 451, 48, "", "item_click", "sprites/recipe_book/rb_slot.png")
+    api_sp(api_gp(menu_id, "crafting_bench"), "index", 1)
     api_log("rb", "defined buttons !!")
-    set_button_text(menu_id, 1)
+    set_button_text(menu_id, filter_items(api_gp(menu_id, "search")))
 end
 
 function draw_book(menu_id)
@@ -62,6 +70,32 @@ function draw_book(menu_id)
         draw_item_buttons(menu_id)
         draw_item_sprites(menu_id, mx + 174 + 2, my + 25 + 2)
         draw_hovered_item_tooltip(menu_id)
+        draw_item_info(menu_id, mx + 334 + 4, my + 25 + 4)
+    end
+end
+
+function draw_item_info(menu_id, x, y)
+    local selected_item = api_gp(menu_id, "selected_item")
+    if selected_item ~= nil then
+        api_draw_button(api_gp(menu_id, "item_large"), false)
+        api_draw_button(api_gp(menu_id, "crafting_bench"), false)
+        for i=1,3 do
+            local ri_button = api_gp(menu_id, "recipe_item" .. i)
+            api_draw_button(ri_button, false)
+            local recipe_item = ITEM_REGISTRY[api_gp(ri_button, "text")]
+            if recipe_item ~= nil then
+                api_draw_sprite(recipe_item["sprite"], 0, x + 46 + (i - 1) * 23, y - 2)
+            end
+        end
+        api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x, y, 2, 2, 0, 0, 1)
+        local crafting_bench = RECIPE_REGISTRY[selected_item]["workstation"]
+        api_draw_sprite(ITEM_REGISTRY[crafting_bench]["sprite"], 0, x + 115, y + 21)
+        local idef = api_get_definition(selected_item)
+        local spacing = 14
+        api_draw_text(x - 7, y + 42, idef["name"], false, "FONT_BOOK", nil)
+        api_draw_text(x - 7, y + 42 + spacing, ITEM_REGISTRY[selected_item]["mod"], nil, "FONT_ORANGE", nil)
+        api_draw_text(x - 7, y + 42 + spacing * 2, idef["category"], false, "FONT_BLUE", nil)
+        api_draw_text(x - 7, y + 42 + spacing * 3, idef["tooltip"], false, "FONT_BOOK", 143)
     end
 end
 
@@ -108,7 +142,14 @@ function set_button_text(menu_id, filtered_item_list)
 end
 
 function type_char(menu_id, keycode)
-    local pkey = KEYCODES[keycode]
+    api_log("keycode", keycode)
+    local pkey = -1
+    if api_get_key_down("SHFT") == 1 then
+        pkey = KEYCODES[keycode + 200]
+    else
+        pkey = KEYCODES[keycode]
+    end
+    
     local search = api_gp(menu_id, "search")
     local ci = api_gp(menu_id, "cursor_index")
     if pkey == "BACKSPACE" then
@@ -151,7 +192,19 @@ function modify_string(str, pos, change, insert)
 end
 
 function item_click(menu_id, button_id)
-    api_log("press !", api_gp(button_id, "text"))
+    local item = api_gp(button_id, "text")
+    if item ~= nil then
+        api_sp(menu_id, "selected_item", item)
+    end
+    local recipe = RECIPE_REGISTRY[item]
+    for i=1,3 do
+        if recipe ~= nil and i <= #recipe["recipe"] then
+            api_sp(api_gp(menu_id, "recipe_item" .. i), "text", recipe["recipe"][i]["item"])
+        else
+            api_sp(api_gp(menu_id, "recipe_item" .. i), "text", "")
+        end
+    end
+    api_sp(api_gp(menu_id, "crafting_bench"), "text", recipe["workstation"])
 end
 
 function draw_hovered_item_tooltip(menu_id)
