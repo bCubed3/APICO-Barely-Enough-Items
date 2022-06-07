@@ -17,7 +17,6 @@ MOD_TOOLTIP_SPR = -1
 TOOLTIP_EDGE_SPR = -1
 TOOLTIP_CENTER_SPR = -1
 TOOLTIP_EDGE_OFFSET = 3
-SPR_REF = {}
 X_OFFSET = 60
 Y_OFFSET = 60
 
@@ -30,16 +29,17 @@ cw_define_recipe({{"item1", 1}, {"item2", 3}}, "output_item", 3)
 ]]--
 function cw_define_recipe(input_recipe, output, num, tab, mod)
 	--COMPAT_WORKBENCH_RECIPES[tab][#COMPAT_WORKBENCH_RECIPES[tab]+1] = {input_table, {output, num}}
-	input_table = {}
+	local input_table = {}
 	for i=1,#input_recipe do
 		input_table[i] = {input_recipe[i]["item"], input_recipe[i]["amount"]}
 	end
 	table.insert(COMPAT_WORKBENCH_RECIPES[mod][tab], {input_table, {output, num}})
 	COMPAT_WORKBENCH_RECIPE_INDEX[mod][tab][output] = #COMPAT_WORKBENCH_RECIPES[mod][tab]
 	for i=1,#input_table do
-		SPR_REF[input_table[i][1]] = get_item_sprite(input_table[i][1])
+		register_item(input_table[i][1])
 	end
-	SPR_REF[output] = get_item_sprite(output)
+	register_recipe(output, input_recipe, num, mod, MOD_NAME .. "_compat_workbench")
+	register_item(output)
 end
 
 function cw_define_mod(mod, tabs_num)
@@ -98,7 +98,7 @@ function define_compat_workbench()
 		draw = "compat_workbench_draw"
 		--tick = "compat_workbench_tick"
     })
-	v_recipe = {{item = "log", amount = 10}, {item = "planks1", amount = 5}}
+	local v_recipe = {{item = "log", amount = 10}, {item = "planks1", amount = 5}}
 	api_define_recipe("crafting", MOD_NAME .. "_compat_workbench", v_recipe, 1)
     cw_define_mod("CompatWB", 1)
     cw_define_recipe(v_recipe, MOD_NAME .. "_compat_workbench", 1, 1, "CompatWB")
@@ -129,8 +129,8 @@ function compat_workbench_define(menu_id)
 		api_sp(api_gp(menu_id, "recipe" .. i), "index", 1)
 	end
 	--api_log("dw", "defining tab 1 recipes ...")
-	tab = api_gp(menu_id, "tab")
-	mod = api_gp(menu_id, "selected_mod")
+	local tab = api_gp(menu_id, "tab")
+	local mod = api_gp(menu_id, "selected_mod")
 	api_define_button(menu_id, "decrease_results", 113 + 65, 92, "decrease_results", "cw_decrease_results", "sprites/cw_result_minus.png")
 	api_define_button(menu_id, "increase_results", 164 + 65, 92, "increase_results", "cw_increase_results", "sprites/cw_result_plus.png")
 	api_define_button(menu_id, "craft_button", 182 + 65, 92, "Craft!", "cw_craft_click", "sprites/cw_craft.png")
@@ -145,9 +145,9 @@ function compat_workbench_define(menu_id)
 end
 
 function compat_workbench_draw(menu_id)
-	cam = api_get_cam()
+	local cam = api_get_cam()
 	--api_log("cw", "drawing tabs ...")
-	mod = api_gp(menu_id, "selected_mod")
+	local mod = api_gp(menu_id, "selected_mod")
 	for i=1,#COMPAT_WORKBENCH_RECIPES[mod] do
 		api_draw_button(api_gp(menu_id, "tab" .. i), false)
 	end
@@ -162,14 +162,14 @@ function compat_workbench_draw(menu_id)
 	end
 	-- draw the sprites to choose recipes
 	--api_log("cw", "finding tab ...")
-	tab = api_gp(menu_id, "tab")
+	local tab = api_gp(menu_id, "tab")
 	--api_log("cw", "drawing recipes ...")
 	--api_log("recipes", #COMPAT_WORKBENCH_RECIPES[mod][tab])
 	for i=1,#COMPAT_WORKBENCH_RECIPES[mod][tab] do
 		recipe = api_gp(menu_id, "recipe" .. i)
 		recipe_oid = api_gp(recipe, "text")
 		api_draw_button(recipe, false)
-		api_draw_sprite(SPR_REF[recipe_oid], 0, api_gp(recipe, "x") - cam["x"], api_gp(recipe, "y") - cam["y"])
+		api_draw_sprite(ITEM_REGISTRY[recipe_oid]["sprite"], 0, api_gp(recipe, "x") - cam["x"], api_gp(recipe, "y") - cam["y"])
 	end
 	-- draw the selected recipe
 	--api_log("cw", "drawing selected recipe ...")
@@ -192,7 +192,7 @@ function compat_workbench_draw(menu_id)
 end
 
 function draw_hovered_recipe_tooltip(menu_id)
-	hl_menu = api_get_highlighted("menu")
+	local hl_menu = api_get_highlighted("menu")
 	if hl_menu == menu_id then
 		hl_button = api_get_highlighted("ui")
 		if hl_button ~= nil then
@@ -207,8 +207,8 @@ function draw_hovered_recipe_tooltip(menu_id)
 end
 
 function get_item_sprite(oid)
-	def = api_get_definition(oid)
-	spr = nil
+	local def = api_get_definition(oid)
+	local spr = nil
 	if def ~= nil then
 		if def["item_sprite"] ~= nil then
 			spr = def["item_sprite"]
@@ -221,61 +221,12 @@ function get_item_sprite(oid)
 	return spr
 end
 
-function draw_tooltip(oid, menu_id)
-	letter_size = 5.5
-	idef = api_get_definition(oid)
-	name = idef["name"]
-	holding_shift = api_get_key_down("SHFT")
-	tooltip = "Hold shift for info."
-	tooltip_size = {x = 117, y = 28}
-	if holding_shift == 1 then
-		tooltip = idef["tooltip"]
-		tooltip_size["x"] = 171
-	end
-	spacing = 13
-	space_nums = {0, 0}
-	cam = api_get_cam()
-	size = api_get_game_size()
-	
-	if #name * letter_size + 1 > tooltip_size["x"] then
-		space_nums[1] = ((#name * letter_size + 1) // tooltip_size["x"])
-		tooltip_size["y"] = tooltip_size["y"] + spacing * space_nums[1]
-	end
-	if holding_shift == 1 then
-		space_nums[1] = space_nums[1] + 2
-		tooltip_size["y"] = tooltip_size["y"] + spacing * 2
-		if #tooltip * letter_size + 1 > tooltip_size["x"] then
-			space_nums[2] = ((#tooltip * letter_size + 1) // tooltip_size["x"])
-			tooltip_size["y"] = tooltip_size["y"] + spacing * space_nums[2]
-		end
-		api_log("size", (#tooltip * letter_size + 1) / 171)
-	end
-	left = size["width"] - tooltip_size["x"] - TOOLTIP_EDGE_OFFSET
-	top = size["height"] - tooltip_size["y"] - TOOLTIP_EDGE_OFFSET
-	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left, top - 1, tooltip_size["x"], 1, 0, 1, 1)
-	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left, top + tooltip_size["y"], tooltip_size["x"], 1, 0, 1, 1)
-	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left - 1, top, 1, tooltip_size["y"], 0, 1, 1)
-	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left + tooltip_size["x"], top, 1, tooltip_size["y"], 0, 1, 1)
-	api_draw_sprite_ext(TOOLTIP_CENTER_SPR, 0, left, top, tooltip_size["x"], tooltip_size["y"], 0, 0, 0.9)
-	camera_pos = api_get_camera_position()
-	player_pos = api_get_player_position()
-	px = player_pos["x"] - camera_pos["x"]
-	py = player_pos["y"] - camera_pos["y"]
-	api_draw_text(left + 3, top + 2, name, false, "FONT_WHITE", tooltip_size["x"])
-	if holding_shift == 1 then
-		api_draw_sprite(MOD_TOOLTIP_SPR, 0, left + 3, top + 3 + spacing)
-		api_draw_text(left + 3 + 11, top + 2 + spacing, api_gp(menu_id, "selected_mod"), false, "FONT_ORANGE", tooltip_size["x"])
-		api_draw_text(left + 3, top + 2 + spacing * 2, idef["category"], false, "FONT_BLUE", tooltip_size["x"])
-	end
-	api_draw_text(left + 3, top + 2 + 13 + spacing * space_nums[1], tooltip, false, "FONT_BGREY", tooltip_size["x"])
-end
-
 function draw_recipe(menu_id, ox, oy, amt)
-	inv_amts = check_inventory(menu_id)
-	can_craft_slots = inv_amts[2]
+	local inv_amts = check_inventory(menu_id)
+	local can_craft_slots = inv_amts[2]
 	inv_amts = inv_amts[1]
 	-- set the colors for numbers (white if craftable, red if not)
-	can_craft_color = {}
+	local can_craft_color = {}
 	for i=1,#can_craft_slots do
 		if can_craft_slots[i] == false then
 			can_craft_color[i] = "RED"
@@ -286,35 +237,35 @@ function draw_recipe(menu_id, ox, oy, amt)
 	if recipe_length == 1 then
 		-- draw middle sprite
 		api_draw_sprite(SLOT_SPR, 0, ox + 65 + 158, oy + 20)
-		api_draw_sprite(SPR_REF[ingredient1[1]], 0, ox + 65 + 160, oy + 22)
+		api_draw_sprite(ITEM_REGISTRY[ingredient1[1]]["sprite"], 0, ox + 65 + 160, oy + 22)
 		draw_numbers(ox + 65 + 158, oy + 37, tostring(inv_amts[1]), tostring(ingredient1[2] * amt), can_craft_color[1])
 	elseif recipe_length == 2 then
-		ingredient2 = recipe[1][2]
+		local ingredient2 = recipe[1][2]
 		-- draw the left sprite
 		api_draw_sprite(SLOT_SPR, 0, ox + 65 + 158 - 19, oy + 20)
-		api_draw_sprite(SPR_REF[ingredient1[1]], 0, ox + 65 + 160 - 19, oy + 22)
+		api_draw_sprite(ITEM_REGISTRY[ingredient1[1]]["sprite"], 0, ox + 65 + 160 - 19, oy + 22)
 		draw_numbers(ox + 65 + 158 - 19, oy + 37, tostring(inv_amts[1]), tostring(ingredient1[2] * amt), can_craft_color[1])
 		-- draw the right sprite
 		api_draw_sprite(SLOT_SPR, 0, ox + 65 + 158 + 19, oy + 20)
-		api_draw_sprite(SPR_REF[ingredient2[1]], 0, ox + 65 + 160 + 19, oy + 22)
+		api_draw_sprite(ITEM_REGISTRY[ingredient2[1]]["sprite"], 0, ox + 65 + 160 + 19, oy + 22)
 		draw_numbers(ox + 65 + 158 + 19, oy + 37, tostring(inv_amts[2]), tostring(ingredient2[2]), can_craft_color[2])
 
 		-- draw the plus
 		api_draw_sprite(PLUS_SPR, 0, ox + 65 + 166, oy + 28)
 	else
-		ingredient2 = recipe[1][2]
-		ingredient3 = recipe[1][3]
+		local ingredient2 = recipe[1][2]
+		local ingredient3 = recipe[1][3]
 		-- draw the left sprite
 		api_draw_sprite(SLOT_SPR, 0, ox + 65 + 158 - 39, oy + 20)
-		api_draw_sprite(SPR_REF[ingredient1[1]], 0, ox + 65 + 160 - 39, oy + 22)
+		api_draw_sprite(ITEM_REGISTRY[ingredient1[1]]["sprite"], 0, ox + 65 + 160 - 39, oy + 22)
 		draw_numbers(ox + 65 + 158 - 39, oy + 37, tostring(inv_amts[1]), tostring(ingredient1[2] * amt), can_craft_color[1])
 		-- draw middle sprite
 		api_draw_sprite(SLOT_SPR, 0, ox + 65 + 158, oy + 20)
-		api_draw_sprite(SPR_REF[ingredient2[1]], 0, ox + 65 + 160, oy + 22)
+		api_draw_sprite(ITEM_REGISTRY[ingredient2[1]]["sprite"], 0, ox + 65 + 160, oy + 22)
 		draw_numbers(ox + 65 + 158, oy + 37, tostring(inv_amts[2]), tostring(ingredient2[2]), can_craft_color[2])
 		-- draw the right sprite
 		api_draw_sprite(SLOT_SPR, 0, ox + 65 + 158 + 39, oy + 20)
-		api_draw_sprite(SPR_REF[ingredient3[1]], 0, ox + 65 + 160 + 39, oy + 22)
+		api_draw_sprite(ITEM_REGISTRY[ingredient3[1]]["sprite"], 0, ox + 65 + 160 + 39, oy + 22)
 		draw_numbers(ox + 65 + 158 + 39, oy + 37, tostring(inv_amts[3]), tostring(ingredient3[2]), can_craft_color[3])
 
 		-- draw the pluses
@@ -325,7 +276,7 @@ function draw_recipe(menu_id, ox, oy, amt)
 	api_draw_sprite(ARROW_SPR, 0, ox + 65 + 166, oy + 44)
 	-- draw recipe output
 	api_draw_sprite(SLOT_SPR, 1, ox + 65 + 158, oy + 57)
-	api_draw_sprite(SPR_REF[output[1]], 0, ox + 65 + 160, oy + 59)
+	api_draw_sprite(ITEM_REGISTRY[output[1]]["sprite"], 0, ox + 65 + 160, oy + 59)
 	draw_number(ox + 65 + 158 + 21, oy + 59 + 15, tostring(amt * output[2]), "WHITE", "RIGHT")
 
 	-- draw craft button
@@ -335,25 +286,25 @@ end
 function check_inventory(menu_id)
 	if api_gp(menu_id, "open") == true then
 		-- check that the player + other menus have enough items
-		recipe = api_gp(menu_id, "selected_recipe")
+		local recipe = api_gp(menu_id, "selected_recipe")
 		if recipe ~= nil then
-			recipe_length = #recipe[1]
-			recipe_multi = api_gp(menu_id, "craft_amount")
+			local recipe_length = #recipe[1]
+			local recipe_multi = api_gp(menu_id, "craft_amount")
 			recipe[1][1][2] = recipe[1][1][2] * recipe_multi
 			recipe[2][2] = recipe[2][2] * recipe_multi
-			i1amt = api_use_total(recipe[1][1][1])
-			out = {i1amt}
-			can_craft = i1amt >= recipe[1][1][2]
-			can_craft_out = {can_craft}
+			local i1amt = api_use_total(recipe[1][1][1])
+			local out = {i1amt}
+			local can_craft = i1amt >= recipe[1][1][2]
+			local can_craft_out = {can_craft}
 			if recipe_length >= 2 then
-				i2amt = api_use_total(recipe[1][2][1])
+				local i2amt = api_use_total(recipe[1][2][1])
 				out[2] = i2amt
 				recipe[1][2][2] = recipe[1][2][2] * recipe_multi
 				can_craft_out[2] = i2amt >= recipe[1][2][2]
 				can_craft = can_craft and can_craft_out[2]
 			end
 			if recipe_length >= 3 then
-				i3amt = api_use_total(recipe[1][3][1])
+				local i3amt = api_use_total(recipe[1][3][1])
 				out[3] = i3amt
 				recipe[1][3][2] = recipe[1][3][2] * recipe_multi
 				can_craft_out[3] = i3amt >= recipe[1][3][2]
@@ -376,7 +327,7 @@ end
 -- actually crafts the item
 function cw_craft_click(menu_id)
 	-- double check that the player has the proper items
-	can_craft = api_use_total(recipe[1][1][1]) >= recipe[1][1][2]
+	local can_craft = api_use_total(recipe[1][1][1]) >= recipe[1][1][2]
 	if recipe_length >= 2 then
 		can_craft = can_craft and api_use_total(recipe[1][2][1]) >= recipe[1][2][2]
 	end
@@ -397,9 +348,9 @@ function cw_craft_click(menu_id)
 end
 
 function cw_recipe_click(menu_id, button_id)
-	mod = api_gp(menu_id, "selected_mod")
-	tab = api_gp(menu_id, "tab")
-	new_out = api_gp(button_id, "text")
+	local mod = api_gp(menu_id, "selected_mod")
+	local tab = api_gp(menu_id, "tab")
+	local new_out = api_gp(button_id, "text")
 	if new_out ~= "" then
 		api_sp(menu_id, "selected_item", api_gp(button_id, "text"))
 		api_sp(menu_id, "selected_recipe", COMPAT_WORKBENCH_RECIPES[mod][tab][COMPAT_WORKBENCH_RECIPE_INDEX[mod][tab][new_out]])
@@ -408,15 +359,15 @@ function cw_recipe_click(menu_id, button_id)
 end
 
 function cw_tab_click(menu_id, button_id)
-	tab = tonumber(api_gp(button_id, "text"))
-	mod = api_gp(menu_id, "selected_mod")
+	local tab = tonumber(api_gp(button_id, "text"))
+	local mod = api_gp(menu_id, "selected_mod")
 	if tab <= #COMPAT_WORKBENCH_RECIPES[mod] then
 		set_tab(menu_id, tab)
 	end
 end
 
 function set_tab(menu_id, tab)
-	mod = api_gp(menu_id, "selected_mod")
+	local mod = api_gp(menu_id, "selected_mod")
 	api_sp(menu_id, "tab", tab)
 	for i=1,20 do
 		if i <= #COMPAT_WORKBENCH_RECIPES[mod][tab] then
@@ -440,7 +391,7 @@ function cw_mod_down(menu_id)
 end
 
 function cw_scroll_mods(menu_id, change)
-	mi = api_gp(menu_id, "mod_offset") + change
+	local mi = api_gp(menu_id, "mod_offset") + change
 	if mi <= #COMPAT_WORKBENCH_MODS - MODS_TO_SHOW and mi >= 0 then
 		api_sp(menu_id, "mod_offset", mi)
 		for i=1,MODS_TO_SHOW do
@@ -458,13 +409,13 @@ function cw_set_mod(menu_id, button_id)
 end
 
 function cw_increase_results(menu_id)
-	amt = api_gp(menu_id, "craft_amount")
+	local amt = api_gp(menu_id, "craft_amount")
 	api_sp(menu_id, "craft_amount", amt + 1)
 	update_amount_display(menu_id, amt + 1)
 end
 
 function cw_decrease_results(menu_id)
-	amt = api_gp(menu_id, "craft_amount")
+	local amt = api_gp(menu_id, "craft_amount")
 	if amt > 1 then
 		api_sp(menu_id, "craft_amount", amt - 1)
 		update_amount_display(menu_id, amt -1)
@@ -477,18 +428,17 @@ end
 
 function draw_numbers(x, y, n1, n2, color, justify)
 	justify = "CENTER" or justify
-	offset = 4
-	start = 0
+	local offset = 4
+	local start = 0
 	if justify == "CENTER" then
 		start = -((#n1 + #n2 - 3) * offset / 2) + 10
 	elseif justify == "RIGHT" then
 		start = -((#n1 + #n2 - 3) * offset)
 	end
-	drawn = 0
-	if color == "WHITE" then 
+	local drawn = 0
+	local numbers = RED_NUMBERS_SPR
+	if color == "WHITE" then
 		numbers = WHITE_NUMBERS_SPR
-	else
-		numbers = RED_NUMBERS_SPR
 	end
 	for i=1, #n1 - 2 do
 		api_draw_sprite(numbers, tonumber(string.sub(n1, i, i)), x + drawn * offset + start, y)
