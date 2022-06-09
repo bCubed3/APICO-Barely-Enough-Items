@@ -1,5 +1,10 @@
-# APICO Compatibility Workbench
- A workbench mod that lets different mods define their own recipes.
+# Barely Enough Items
+ A list of all* items in the game, along with descriptions and recipes.
+ 
+ *Not all items are implemented yet.
+
+# Compatibility workbench
+ A workbench that lets different mods define their own recipes.
  
 Usage :
  - define your mod and the number of tabs you want (up to 5)
