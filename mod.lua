@@ -13,6 +13,7 @@ function init()
     make_keycodes()
     define_recipe_book()
     make_letter_lengths()
+    api_set_devmode(true)
     define_sample_recipes()
     define_compat_workbench()
     
@@ -22,7 +23,8 @@ end
 
 function ready()
     api_blacklist_input(MOD_NAME .. "_recipe_book")
-    api_log("registry", ITEM_REGISTRY)
+    --sort_registry()
+    --api_log("registry", ITEM_REGISTRY)
 end
 
 function key(keycode)

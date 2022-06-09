@@ -16,6 +16,7 @@ RED_NUMBERS_SPR = -1
 MOD_TOOLTIP_SPR = -1
 TOOLTIP_EDGE_SPR = -1
 TOOLTIP_CENTER_SPR = -1
+TOOLTIP_ITEM_BG_SPR = -1
 TOOLTIP_EDGE_OFFSET = 3
 X_OFFSET = 60
 Y_OFFSET = 60
@@ -38,7 +39,7 @@ function cw_define_recipe(input_recipe, output, num, tab, mod)
 	for i=1,#input_table do
 		register_item(input_table[i][1])
 	end
-	register_recipe(output, input_recipe, num, mod, MOD_NAME .. "_compat_workbench")
+	register_recipe(output, input_recipe, num, mod, {"workbench", MOD_NAME .. "_compat_workbench"})
 	register_item(output)
 end
 
@@ -77,6 +78,7 @@ function prep_compat_workbench()
 	MOD_TOOLTIP_SPR = api_define_sprite("mod_tooltip", "sprites/cw_mod_tooltip.png", 1)
 	TOOLTIP_EDGE_SPR = api_define_sprite("cw_tooltip_edge", "sprites/cw_tooltip_edge.png", 1)
 	TOOLTIP_CENTER_SPR = api_define_sprite("cw_tooltip_center", "sprites/cw_tooltip_center.png", 1)
+	TOOLTIP_ITEM_BG_SPR = api_define_sprite("tooltip_item_bg", "sprites/tooltip_item_bg.png", 1)
 end
 
 function define_compat_workbench()

@@ -13,8 +13,11 @@ end
 ---@param _amt number amount the recipe produces
 ---@param _mod string mod name that adds the item / recipe
 ---@param _workstation string oid of the mod that the recipe is in
-function register_recipe(out, _recipe, _amt, _mod, _workstation)
-    RECIPE_REGISTRY[out] = {mod = _mod, recipe = _recipe, amount = _amt, workstation = _workstation}
+function register_recipe(out, _recipe, _amt, _mod, _workstations)
+    if type(_workstations) == "string" then
+        _workstations = {_workstations}
+    end
+    RECIPE_REGISTRY[out] = {mod = _mod, recipe = _recipe, amount = _amt, workstations = _workstations}
     register_item(out)
 end
 

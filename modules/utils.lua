@@ -1,6 +1,6 @@
 KEYCODES = {}
 LETTER_LENGTHS = {}
-LETTERS = " 0123456789abcedfghijklmnopqrstuvwxyz;'@#"
+LETTERS = " 0123456789abcedfghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ;'@#.,!/\\-+"
 
 function make_keycodes()
     KEYCODES[8] = "BACKSPACE"
@@ -15,6 +15,7 @@ function make_keycodes()
         KEYCODES[i] = string.char(i + 32)
     end
     KEYCODES[186] = ";"
+    KEYCODES[188] = ","
     KEYCODES[222] = "'"
     KEYCODES[250] = "@"
     KEYCODES[251] = "#"
@@ -26,11 +27,11 @@ end
 function make_letter_lengths()
     for i=1,#LETTERS do
         local letter = string.sub(LETTERS, i, i)
-        if letter == "'" then
+        if letter == "'" or letter == "!" or letter == "." then
             LETTER_LENGTHS[letter] = 1
-        elseif letter == " " or letter == ";" then
+        elseif letter == " " or letter == ";" or letter == "," then
             LETTER_LENGTHS[letter] = 2
-        elseif letter == "i" or letter == "l" or letter == "1" or letter == "$" then
+        elseif letter == "i" or letter == "l" or letter == "1" or letter == "$" or letter == "-" or letter == "+" then
             LETTER_LENGTHS[letter] = 3
         elseif letter == "j" or letter == "k" then
             LETTER_LENGTHS[letter] = 4
@@ -47,7 +48,11 @@ function get_string_px(str)
     local letter = ""
     for i=1,#str do
         letter = string.sub(str, i, i)
-        out = out + LETTER_LENGTHS[letter] + 1
+        if LETTER_LENGTHS[letter] ~= nil then
+            out = out + LETTER_LENGTHS[letter] + 1
+        else
+            out = out + 5
+        end
     end
     if out > 0 then
         out = out - 1
@@ -55,34 +60,80 @@ function get_string_px(str)
     return out
 end
 
+function get_text_height(text_lines, width)
+    local spacer = 0
+    local spacing = 13
+    for i=1,#text_lines do
+        if text_lines[i]["text"] ~= nil then
+            spacer = spacer + math.ceil(get_string_px(text_lines[i]["text"]) / width)
+        end
+    end
+    return spacer * spacing
+end
+
+function draw_text_lines(text_lines, x, y, width)
+    local spacer = 0
+    local spacing = 13
+    for i=1,#text_lines do
+        if text_lines[i]["text"] ~= nil then
+            api_draw_text(x, y + spacer * spacing, text_lines[i]["text"], false, text_lines[i]["color"], width)
+            --api_log("txt_ln", text_lines[i])
+            spacer = spacer + math.ceil(get_string_px(text_lines[i]["text"]) / width)
+            --api_log("spacer", spacer)
+        end
+    end
+    return spacer * spacing
+end
+
+function draw_sprite_list(oids, x, y)
+    local spacing = 3
+    for i=1,#oids do
+        api_draw_sprite(TOOLTIP_ITEM_BG_SPR, 0, x + (18 + spacing) * (i - 1), y)
+        api_draw_sprite(ITEM_REGISTRY[oids[i]]["sprite"], 0, x + (18 + spacing) * (i - 1) + 1, y + 1)
+    end
+end
+
 function draw_tooltip(oid, menu_id)
-	local letter_size = 5.5
 	local idef = api_get_definition(oid)
 	local name = idef["name"]
+    local durability = idef["durability"]
+    local sell_price = idef["cost"]
+    local machines = idef["machines"]
+    if type(sell_price) == "number" then
+        sell_price = 0
+    else
+        sell_price = sell_price["sell"]
+    end
 	local holding_shift = api_get_key_down("SHFT")
-	local tooltip = "Hold shift for info."
+	local tooltip = "Hold shift for info"
 	local tooltip_size = {x = 117, y = 28}
 	if holding_shift == 1 then
 		tooltip = idef["tooltip"]
 		tooltip_size["x"] = 171
 	end
-	local spacing = 13
-	local space_nums = {0, 0}
 	local size = api_get_game_size()
-	
-	if #name * letter_size + 1 > tooltip_size["x"] then
-		space_nums[1] = ((#name * letter_size + 1) // tooltip_size["x"])
-		tooltip_size["y"] = tooltip_size["y"] + spacing * space_nums[1]
-	end
-	if holding_shift == 1 then
-		space_nums[1] = space_nums[1] + 2
-		tooltip_size["y"] = tooltip_size["y"] + spacing * 2
-		if #tooltip * letter_size + 1 > tooltip_size["x"] then
-			space_nums[2] = ((#tooltip * letter_size + 1) // tooltip_size["x"])
-			tooltip_size["y"] = tooltip_size["y"] + spacing * space_nums[2]
-		end
-		api_log("size", (#tooltip * letter_size + 1) / 171)
-	end
+    local text_to_draw = {
+        {text = name, color = "FONT_WHITE"},
+        {text = ITEM_REGISTRY[oid]["mod"], color = "FONT_ORANGE"},
+        {text = idef["category"], color = "FONT_BLUE"},
+        {text = tooltip, color = "FONT_BGREY"}
+    }
+    if durability ~= nil then
+        durability = math.floor(durability)
+        table.insert(text_to_draw, {text = "Durability: " .. durability .. "/" .. durability, color = "FONT_YELLOW"})
+    end
+    if sell_price ~= 0 then
+        table.insert(text_to_draw, {text = "Sells for £" .. sell_price, color = "FONT_YELLOW"})
+    end
+    if #machines ~= 0 and holding_shift == 1 then
+        table.insert(text_to_draw, {text = "Use with:", color = "FONT_GREY"})
+    end
+    tooltip_size["y"] = get_text_height(text_to_draw, tooltip_size["x"]) + 2
+    --api_log("machines", machines)
+    if #machines ~= 0 then
+        tooltip_size["y"] = tooltip_size["y"] + 21
+        
+    end
 	local left = size["width"] - tooltip_size["x"] - TOOLTIP_EDGE_OFFSET
 	local top = size["height"] - tooltip_size["y"] - TOOLTIP_EDGE_OFFSET
 	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left, top - 1, tooltip_size["x"], 1, 0, 1, 1)
@@ -92,13 +143,8 @@ function draw_tooltip(oid, menu_id)
 	api_draw_sprite_ext(TOOLTIP_CENTER_SPR, 0, left, top, tooltip_size["x"], tooltip_size["y"], 0, 0, 0.9)
 	local camera_pos = api_get_camera_position()
 	local player_pos = api_get_player_position()
-	local px = player_pos["x"] - camera_pos["x"]
-	local py = player_pos["y"] - camera_pos["y"]
-	api_draw_text(left + 3, top + 2, name, false, "FONT_WHITE", tooltip_size["x"])
-	if holding_shift == 1 then
-		api_draw_sprite(MOD_TOOLTIP_SPR, 0, left + 3, top + 3 + spacing)
-		api_draw_text(left + 3 + 11, top + 2 + spacing, ITEM_REGISTRY[oid]["mod"], false, "FONT_ORANGE", tooltip_size["x"])
-		api_draw_text(left + 3, top + 2 + spacing * 2, idef["category"], false, "FONT_BLUE", tooltip_size["x"])
-	end
-	api_draw_text(left + 3, top + 2 + 13 + spacing * space_nums[1], tooltip, false, "FONT_BGREY", tooltip_size["x"])
+    draw_text_lines(text_to_draw, left + 3, top + 2, tooltip_size["x"] - 3)
+    if #machines ~= 0 then
+        draw_sprite_list(machines, left + 3, top + tooltip_size["y"] - 21)
+    end
 end

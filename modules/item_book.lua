@@ -1,6 +1,6 @@
 RB_CURSOR_SPR = -1
 RB_SLOT_SPR = -1
-DISPLAY_CHAR_AMT = 22
+TEXTBOX_SIZE = 122
 
 
 function prep_recipe_book()
@@ -36,15 +36,22 @@ function recipe_book_define(menu_id)
     api_dp(menu_id, "cursor_index", 0)
     api_dp(menu_id, "cursor_relative", 0)
     api_dp(menu_id, "display_start", 0)
+    api_dp(menu_id, "display_end", 0)
     api_dp(menu_id, "selected_item", nil)
+    api_dp(menu_id, "bei_scroll", 0)
+    api_dp(menu_id, "search_results", nil)
+    api_dp(menu_id, "si_workstations", nil)
     api_log("rb", "defining buttons ...")
     define_items_buttons(menu_id, 174, 25)
-    api_define_button(menu_id, "item_large", 334, 25, "", "cw_do_nothing", "sprites/recipe_book/rb_slot_large.png")
+    
     for i=1,3 do
         api_define_button(menu_id, "recipe_item" .. i, 382 + (i - 1) * 23, 25, "", "item_click", "sprites/recipe_book/rb_slot.png")
         api_sp(api_gp(menu_id, "recipe_item" .. i), "index", 1)
     end
-    api_define_button(menu_id, "crafting_bench", 451, 48, "", "item_click", "sprites/recipe_book/rb_slot.png")
+    api_define_button(menu_id, "button_items_up", 234, 11, "", "items_up", "sprites/recipe_book/rb_up.png")
+    api_define_button(menu_id, "button_items_down", 234, 235, "", "items_down", "sprites/recipe_book/rb_down.png")
+    api_define_button(menu_id, "item_large", 334, 25, "", "cw_do_nothing", "sprites/recipe_book/rb_slot_large.png")
+    api_define_button(menu_id, "crafting_bench", 451, 48, "", "wb_item_click", "sprites/recipe_book/rb_slot.png")
     api_sp(api_gp(menu_id, "crafting_bench"), "index", 1)
     api_log("rb", "defined buttons !!")
     set_button_text(menu_id, filter_items(api_gp(menu_id, "search")))
@@ -63,20 +70,28 @@ function draw_book(menu_id)
         local cursor_index = api_gp(menu_id, "cursor_index")
         local cursor_relative = api_gp(menu_id, "cursor_relative")
         local display_start = api_gp(menu_id, "display_start")
-        local search_text = string.sub(search_text, display_start, display_start + DISPLAY_CHAR_AMT)
+        local display_end = api_gp(menu_id, "display_end")
+        search_text = string.sub(search_text, display_start, display_end)
         api_draw_text(mx + search_box_pos["x"], my + search_box_pos["y"], search_text, false, "FONT_GREY", nil)
         local cursor_px = get_string_px(string.sub(search_text, 1, cursor_relative))
+        --api_log("cpx", cursor_px)
+        -- draw search bar cursor
         api_draw_sprite(RB_CURSOR_SPR, 1, mx + search_box_pos["x"] + cursor_px, my + search_box_pos["y"])
         draw_item_buttons(menu_id)
         draw_item_sprites(menu_id, mx + 174 + 2, my + 25 + 2)
         draw_hovered_item_tooltip(menu_id)
         draw_item_info(menu_id, mx + 334 + 4, my + 25 + 4)
+        -- draw arrow buttons
+        api_draw_button(api_gp(menu_id, "button_items_down"), false)
+        api_draw_button(api_gp(menu_id, "button_items_up"), false)
+        --api_draw_text(0, 100, "ci : " .. cursor_index .. ", cr : " .. cursor_relative .. ", ds : " .. display_start .. ", de : " .. display_end, true)
     end
 end
 
 function draw_item_info(menu_id, x, y)
     local selected_item = api_gp(menu_id, "selected_item")
     if selected_item ~= nil then
+        local idef = api_get_definition(selected_item)
         api_draw_button(api_gp(menu_id, "item_large"), false)
         api_draw_button(api_gp(menu_id, "crafting_bench"), false)
         for i=1,3 do
@@ -88,14 +103,20 @@ function draw_item_info(menu_id, x, y)
             end
         end
         api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x, y, 2, 2, 0, 0, 1)
-        local crafting_bench = RECIPE_REGISTRY[selected_item]["workstation"]
-        api_draw_sprite(ITEM_REGISTRY[crafting_bench]["sprite"], 0, x + 115, y + 21)
+        
+        if RECIPE_REGISTRY[selected_item] ~= nil then
+            local crafting_bench = RECIPE_REGISTRY[selected_item]["workstations"]
+            api_draw_sprite(ITEM_REGISTRY[crafting_bench[TIMER % #crafting_bench + 1]]["sprite"], 0, x + 115, y + 21)
+        end
         local idef = api_get_definition(selected_item)
         local spacing = 14
-        api_draw_text(x - 7, y + 42, idef["name"], false, "FONT_BOOK", nil)
-        api_draw_text(x - 7, y + 42 + spacing, ITEM_REGISTRY[selected_item]["mod"], nil, "FONT_ORANGE", nil)
-        api_draw_text(x - 7, y + 42 + spacing * 2, idef["category"], false, "FONT_BLUE", nil)
-        api_draw_text(x - 7, y + 42 + spacing * 3, idef["tooltip"], false, "FONT_BOOK", 143)
+        local text_to_draw = {
+            {text = idef["name"], color = "FONT_BOOK"},
+            {text = ITEM_REGISTRY[selected_item]["mod"], color = "FONT_ORANGE"},
+            {text = idef["category"], color = "FONT_BLUE"},
+            {text = idef["tooltip"], color = "FONT_BOOK"}
+        }
+        local text_height = draw_text_lines(text_to_draw, x - 7, y + 42, 143)
     end
 end
 
@@ -131,10 +152,13 @@ function draw_item_sprites(menu_id, tx, ty)
 end
 
 function set_button_text(menu_id, filtered_item_list)
+    table.sort(filtered_item_list)
+    api_sp(menu_id, "search_results", filtered_item_list)
+    local scroll = api_gp(menu_id, "bei_scroll") * 6
     local items_shown = 54
     for i=1,items_shown do
-        if i <= #filtered_item_list then
-            api_sp(api_gp(menu_id, "item_button" .. i), "text", filtered_item_list[i])
+        if math.floor(i + scroll) <= #filtered_item_list then
+            api_sp(api_gp(menu_id, "item_button" .. i), "text", filtered_item_list[math.floor(i + scroll)])
         else
             api_sp(api_gp(menu_id, "item_button" .. i), "text", "")
         end
@@ -152,9 +176,20 @@ function type_char(menu_id, keycode)
     
     local search = api_gp(menu_id, "search")
     local ci = api_gp(menu_id, "cursor_index")
+    local cr = api_gp(menu_id, "cursor_relative")
+    local ds = api_gp(menu_id, "display_start")
+    local de = api_gp(menu_id, "display_end")
     if pkey == "BACKSPACE" then
-        api_sp(menu_id, "search", modify_string(search, ci, "", true))
-        move_cursor(menu_id, -1)
+        if ci > 0 then
+            if ci > cr then
+                api_sp(menu_id, "search", modify_string(search, ci, "", true))
+                api_sp(menu_id, "cursor_index", ci - 1)
+                scroll_textbox_left(menu_id, 1)
+            else
+                api_sp(menu_id, "search", modify_string(search, ci, "", true))
+                move_cursor(menu_id, -1)
+            end
+        end
     elseif pkey == "LEFT" then
         move_cursor(menu_id, -1)
     elseif pkey == "RIGHT" then
@@ -162,7 +197,13 @@ function type_char(menu_id, keycode)
     else
         ci = api_gp(menu_id, "cursor_index")
         api_sp(menu_id, "search", modify_string(search, ci, pkey, false))
+        scroll_textbox_right(menu_id, 1)
         move_cursor(menu_id, 1)
+    end
+    de = api_gp(menu_id, "display_end")
+    search = api_gp(menu_id, "search")
+    if de > #search then
+        api_sp(menu_id, "display_end", #search)
     end
     set_button_text(menu_id, filter_items(api_gp(menu_id, "search")))
 end
@@ -170,14 +211,42 @@ end
 function move_cursor(menu_id, change)
     local ci = api_gp(menu_id, "cursor_index") + change
     local cr = api_gp(menu_id, "cursor_relative") + change
-    local ds = api_gp(menu_id, "display_start") + change
-    if 1 <= ci and ci <= #api_gp(menu_id, "search") then
+    local search = api_gp(menu_id, "search")
+    local ds = api_gp(menu_id, "display_start")
+    local de = api_gp(menu_id, "display_end")
+    -- step 1 : check if it can be moved there
+    if 0 <= ci and ci <= #search then
         api_sp(menu_id, "cursor_index", ci)
-        if cr < 1 or cr > DISPLAY_CHAR_AMT then
-            api_sp(menu_id, "display_start", ds)
-        else
+        if ci > de then
+            scroll_textbox_right(menu_id, change)
+        elseif ci < ds then
+            scroll_textbox_left(menu_id, -change)
+        end
+        if (change > 0 and cr <= de - ds + 1) or (change < 0 and cr >= 0) then
             api_sp(menu_id, "cursor_relative", cr)
         end
+    end
+end
+
+function scroll_textbox_right(menu_id, amount)
+    local search = api_gp(menu_id, "search")
+    local ds = api_gp(menu_id, "display_start")
+    local de = api_gp(menu_id, "display_end")
+    local new_de = de + amount
+    api_sp(menu_id, "display_end", new_de)
+    if get_string_px(string.sub(search, ds, new_de)) > TEXTBOX_SIZE then
+        api_sp(menu_id, "display_start", ds + amount)
+    end
+end
+
+function scroll_textbox_left(menu_id, amount)
+    local search = api_gp(menu_id, "search")
+    local ds = api_gp(menu_id, "display_start")
+    local de = api_gp(menu_id, "display_end")
+    local new_ds = ds - amount
+    api_sp(menu_id, "display_start", new_ds)
+    if get_string_px(string.sub(search, new_ds, de)) > TEXTBOX_SIZE then
+        api_sp(menu_id, "display_end", de - amount)
     end
 end
 
@@ -193,18 +262,25 @@ end
 
 function item_click(menu_id, button_id)
     local item = api_gp(button_id, "text")
+    set_item(menu_id, item)
+end
+
+function set_item(menu_id, item)
     if item ~= nil then
         api_sp(menu_id, "selected_item", item)
-    end
-    local recipe = RECIPE_REGISTRY[item]
-    for i=1,3 do
-        if recipe ~= nil and i <= #recipe["recipe"] then
-            api_sp(api_gp(menu_id, "recipe_item" .. i), "text", recipe["recipe"][i]["item"])
-        else
-            api_sp(api_gp(menu_id, "recipe_item" .. i), "text", "")
+        local recipe = RECIPE_REGISTRY[item]
+        for i=1,3 do
+            if recipe ~= nil and i <= #recipe["recipe"] then
+                api_sp(api_gp(menu_id, "recipe_item" .. i), "text", recipe["recipe"][i]["item"])
+            else
+                api_sp(api_gp(menu_id, "recipe_item" .. i), "text", "")
+            end
+        end
+        --api_sp(api_gp(menu_id, "crafting_bench"), "text", recipe["workstations"])
+        if recipe ~= nil then
+            api_sp(menu_id, "si_workstations", recipe["workstations"])
         end
     end
-    api_sp(api_gp(menu_id, "crafting_bench"), "text", recipe["workstation"])
 end
 
 function draw_hovered_item_tooltip(menu_id)
@@ -220,4 +296,29 @@ function draw_hovered_item_tooltip(menu_id)
 			end
 		end
 	end
+end
+
+function items_down(menu_id)
+    scroll_items(menu_id, 1)
+end
+
+function items_up (menu_id)
+    scroll_items(menu_id, -1)
+end
+
+function scroll_items(menu_id, change)
+    local new_scroll = api_gp(menu_id, "bei_scroll") + change
+    
+    local sr = api_gp(menu_id, "search_results")
+    if (new_scroll + 8) * 6 <= #sr and (new_scroll >= 0) then
+        api_sp(menu_id, "bei_scroll", new_scroll)
+        set_button_text(menu_id, sr)
+    end
+end
+
+function wb_item_click(menu_id)
+    local workstations = api_gp(menu_id, "si_workstations")
+    if workstations ~= nil then
+        set_item(menu_id, workstations[TIMER % #workstations + 1])
+    end
 end
