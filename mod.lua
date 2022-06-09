@@ -1,4 +1,4 @@
-MOD_NAME = "compat_workbench"
+MOD_NAME = "bei"
 TIMER = 0
 
 function register()
