@@ -31,6 +31,11 @@ function register_item(oid)
             api_log("si", small_item)
             ITEM_REGISTRY[oid]["sprite"] = small_item
         end
+        if type(idef["machines"]) == "table" then
+            for i=1, #idef["machines"] do
+                register_item(idef["machines"][i])
+            end
+        end
     end
 end
 
