@@ -1,3 +1,4 @@
+--MOD.LUA
 MOD_NAME = "bei"
 TIMER = 0
 
@@ -14,9 +15,9 @@ function init()
     define_recipe_book()
     make_letter_lengths()
     api_set_devmode(true)
-    define_sample_recipes()
+    cw_define_mod("bei", "BEI", 1)
     define_compat_workbench()
-    
+    get_described_recipes()
     --api_blacklist_input(MOD_NAME .. "_recipe_book")
     return "Success"
 end
@@ -25,6 +26,8 @@ function ready()
     api_blacklist_input(MOD_NAME .. "_recipe_book")
     --sort_registry()
     --api_log("registry", ITEM_REGISTRY)
+    register_items()
+    filter_unused_tabs()
 end
 
 function key(keycode)

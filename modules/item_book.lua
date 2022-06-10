@@ -6,6 +6,8 @@ TEXTBOX_SIZE = 122
 function prep_recipe_book()
     RB_CURSOR_SPR = api_define_sprite("rb_cursor", "sprites/recipe_book/recipe_book_cursor.png", 2)
     RB_SLOT_SPR = api_define_sprite("rb_slot", "sprites/recipe_book/rb_slot.png", 2)
+    RB_CRAFT_ARROW = api_define_sprite("rb_craft_arrow", "sprites/recipe_book/rb_craft_arrow.png", 1)
+    RB_ITEM_UNDERLINE = api_define_sprite("rb_item_underline", "sprites/recipe_book/rb_item_underline.png", 1)
 end
 
 function define_recipe_book()
@@ -94,6 +96,8 @@ function draw_item_info(menu_id, x, y)
         local idef = api_get_definition(selected_item)
         api_draw_button(api_gp(menu_id, "item_large"), false)
         api_draw_button(api_gp(menu_id, "crafting_bench"), false)
+        api_draw_sprite(RB_ITEM_UNDERLINE, 0, x - 3, y + 37)
+        api_draw_sprite(RB_CRAFT_ARROW, 0, x + 42, y + 18)
         for i=1,3 do
             local ri_button = api_gp(menu_id, "recipe_item" .. i)
             api_draw_button(ri_button, false)
@@ -112,9 +116,10 @@ function draw_item_info(menu_id, x, y)
         local spacing = 14
         local text_to_draw = {
             {text = idef["name"], color = "FONT_BOOK"},
-            {text = ITEM_REGISTRY[selected_item]["mod"], color = "FONT_ORANGE"},
+            {text = MOD_REGISTRY[ITEM_REGISTRY[selected_item]["mod"]], color = "FONT_ORANGE"},
             {text = idef["category"], color = "FONT_BLUE"},
-            {text = idef["tooltip"], color = "FONT_BOOK"}
+            {text = idef["tooltip"], color = "FONT_BOOK"},
+            {text = "oid : " .. selected_item, color = "FONT_GREY"}
         }
         local text_height = draw_text_lines(text_to_draw, x - 7, y + 42, 143)
     end
@@ -167,6 +172,7 @@ end
 
 function type_char(menu_id, keycode)
     api_log("keycode", keycode)
+    api_sp(menu_id, "bei_scroll", 0)
     local pkey = -1
     if api_get_key_down("SHFT") == 1 then
         pkey = KEYCODES[keycode + 200]
@@ -262,7 +268,9 @@ end
 
 function item_click(menu_id, button_id)
     local item = api_gp(button_id, "text")
-    set_item(menu_id, item)
+    if item ~= "" then
+        set_item(menu_id, item)
+    end
 end
 
 function set_item(menu_id, item)
