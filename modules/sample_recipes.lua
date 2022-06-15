@@ -8,6 +8,10 @@ TABS = {
     painting = 5
 }
 
+function register_rotating_stock()
+
+end
+
 -- function that defines example recipes
 function get_described_recipes()
     cw_define_mod("vanilla", "Vanilla", 5)

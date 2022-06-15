@@ -4,6 +4,7 @@ MOD_REGISTRY = {}
 ITEM_REGISTRY = {}
 ITEM_LIST = {}
 RECIPE_REGISTRY = {}
+NPC_REGISTRY = {}
 BLACKLISTED_ITEMS = {
     wall7 = ".",
     debugger1 = ".",
@@ -40,16 +41,19 @@ function register_item(oid, mod, itype)
     if ITEM_REGISTRY[oid] == nil and is_blacklisted(oid) == false then
         local idef = api_get_definition(oid)
         if idef ~= nil then
-        ITEM_REGISTRY[oid] = {sprite = api_get_sprite("sp_" .. oid), name = idef["name"], mod = mod, itype = itype}
-        local small_item = api_get_sprite("sp_" .. oid .. "_item")
-        if small_item ~= 686 then
-            ITEM_REGISTRY[oid]["sprite"] = small_item
-        end
-        if type(idef["machines"]) == "table" then
-            for i=1, #idef["machines"] do
-                register_item(idef["machines"][i])
+            if oid == "npc1" then
+                register_npc(oid)
             end
-        end
+            ITEM_REGISTRY[oid] = {sprite = api_get_sprite("sp_" .. oid), name = idef["name"], mod = mod, itype = itype}
+            local small_item = api_get_sprite("sp_" .. oid .. "_item")
+            if small_item ~= 686 then
+                ITEM_REGISTRY[oid]["sprite"] = small_item
+            end
+            if type(idef["machines"]) == "table" then
+                for i=1, #idef["machines"] do
+                    register_item(idef["machines"][i])
+                end
+            end
         end
     end
 end
@@ -58,6 +62,17 @@ function register_bee(bee)
 
 end
 
+function register_npc(oid)
+    local def = api_get_definition(oid)
+    api_log("shop", def)
+end
+
+function register_npcs()
+    local objs = api_get_menu_objects()
+    for i=1,#objs do
+        api_log("npc", objs[i])
+    end
+end
 
 function register_items()
     local vanilla_items = api_describe_oids(false)

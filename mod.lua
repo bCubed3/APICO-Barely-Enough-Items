@@ -28,6 +28,7 @@ function ready()
     --api_log("registry", ITEM_REGISTRY)
     register_items()
     filter_unused_tabs()
+    register_npcs()
 end
 
 function key(keycode)
