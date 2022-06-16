@@ -70,7 +70,24 @@ end
 function register_npcs()
     local objs = api_get_menu_objects()
     for i=1,#objs do
-        api_log("npc", objs[i])
+        local def = api_get_definition(objs[i]["oid"]) or {}
+        local oid = def["obj"]
+        if def["shop"] == 1 then
+            local shop_id = api_gp(objs[i]["menu_id"], "shop")
+            if shop_id ~= nil then
+                local slots = api_get_slots(shop_id)
+                NPC_REGISTRY[oid] = {}
+                ITEM_REGISTRY[oid]["itype"] = "npc"
+                for j=2,#slots do
+                    local item = slots[j]["item"]
+                    if item ~= "" then
+                        local idef = api_get_definition(item) or {}
+                        table.insert(NPC_REGISTRY[oid], {item = item, buy = idef["cost"]["buy"], honeycore = idef["honeycore"]})
+                        register_recipe(item, {}, 1, "placeholder", oid)
+                    end
+                end
+            end
+        end
     end
 end
 
@@ -91,13 +108,13 @@ end
 function register_bees()
     local vanilla_bees = api_describe_bees(false)
     api_log("vbees", vanilla_bees["chaotic"])
-    for i=1,#vanilla_bees do
-        register_item(vanilla_bees[i], "vanilla", "bee")
+    for bee,stats in pairs(vanilla_bees) do
+        api_log("bee", bee)
     end
     local modded_bees = api_describe_bees(true)
     for k,v in pairs(modded_bees) do
         for i=1,#v do
-            register_item(v[i], k, "bee")
+            
         end
     end
 end

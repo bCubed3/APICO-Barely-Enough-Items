@@ -26,14 +26,16 @@ function ready()
     api_blacklist_input(MOD_NAME .. "_recipe_book")
     --sort_registry()
     --api_log("registry", ITEM_REGISTRY)
+    --register_bees()
     register_items()
     filter_unused_tabs()
     register_npcs()
+    api_log("shops", NPC_REGISTRY)
 end
 
 function key(keycode)
-    hl = api_get_highlighted("menu")
-    hl_inst = api_get_inst(hl)
+    local hl = api_get_highlighted("menu")
+    local hl_inst = api_get_inst(hl) or {}
     if hl ~= nil and hl_inst["oid"] == MOD_NAME .. "_recipe_book" then
         type_char(hl, keycode)
     end

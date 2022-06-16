@@ -146,7 +146,12 @@ function draw_tooltip(oid, menu_id)
         table.insert(text_to_draw, {text = "Durability: " .. durability .. "/" .. durability, color = "FONT_YELLOW"})
     end
     if sell_price ~= 0 then
-        table.insert(text_to_draw, {text = "Sells for £" .. sell_price, color = "FONT_YELLOW"})
+        if idef["honeycore"] == 1 then
+            table.insert(text_to_draw, {text = "Sells for $" .. sell_price, color = "FONT_ORANGE"})
+        else
+            table.insert(text_to_draw, {text = "Sells for £" .. sell_price, color = "FONT_YELLOW"})
+        end
+        
     end
     if #machines ~= 0 and holding_shift == 1 then
         table.insert(text_to_draw, {text = "Use with:", color = "FONT_GREY"})

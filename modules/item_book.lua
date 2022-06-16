@@ -45,7 +45,6 @@ function recipe_book_define(menu_id)
     api_dp(menu_id, "si_workstations", nil)
     api_log("rb", "defining buttons ...")
     define_items_buttons(menu_id, 174, 25)
-    
     for i=1,3 do
         api_define_button(menu_id, "recipe_item" .. i, 382 + (i - 1) * 23, 25, "", "item_click", "sprites/recipe_book/rb_slot.png")
         api_sp(api_gp(menu_id, "recipe_item" .. i), "index", 1)
@@ -53,8 +52,9 @@ function recipe_book_define(menu_id)
     api_define_button(menu_id, "button_items_up", 234, 11, "", "items_up", "sprites/recipe_book/rb_up.png")
     api_define_button(menu_id, "button_items_down", 234, 235, "", "items_down", "sprites/recipe_book/rb_down.png")
     api_define_button(menu_id, "item_large", 334, 25, "", "cw_do_nothing", "sprites/recipe_book/rb_slot_large.png")
-    api_define_button(menu_id, "crafting_bench", 451, 48, "", "wb_item_click", "sprites/recipe_book/rb_slot.png")
+    api_define_button(menu_id, "crafting_bench", 451, 48, "rotating_workstation", "wb_item_click", "sprites/recipe_book/rb_slot.png")
     api_sp(api_gp(menu_id, "crafting_bench"), "index", 1)
+    api_sp(api_gp(menu_id, "item_large"), "index", 1)
     api_log("rb", "defined buttons !!")
     set_button_text(menu_id, filter_items(api_gp(menu_id, "search")))
 end
@@ -82,7 +82,13 @@ function draw_book(menu_id)
         draw_item_buttons(menu_id)
         draw_item_sprites(menu_id, mx + 174 + 2, my + 25 + 2)
         draw_hovered_item_tooltip(menu_id)
-        draw_item_info(menu_id, mx + 334 + 4, my + 25 + 4)
+        local selected_item = api_gp(menu_id, "selected_item")
+        if ITEM_REGISTRY[selected_item]["itype"] == "npc" then
+            draw_npc_info(menu_id, mx + 334 + 4, my + 25 + 4)
+        else
+            draw_item_info(menu_id, mx + 334 + 4, my + 25 + 4)
+        end
+        
         -- draw arrow buttons
         api_draw_button(api_gp(menu_id, "button_items_down"), false)
         api_draw_button(api_gp(menu_id, "button_items_up"), false)
@@ -112,16 +118,89 @@ function draw_item_info(menu_id, x, y)
             local crafting_bench = RECIPE_REGISTRY[selected_item]["workstations"]
             api_draw_sprite(ITEM_REGISTRY[crafting_bench[TIMER % #crafting_bench + 1]]["sprite"], 0, x + 115, y + 21)
         end
-        local idef = api_get_definition(selected_item)
-        local spacing = 14
-        local text_to_draw = {
-            {text = idef["name"], color = "FONT_BOOK"},
-            {text = MOD_REGISTRY[ITEM_REGISTRY[selected_item]["mod"]], color = "FONT_ORANGE"},
-            {text = idef["category"], color = "FONT_BLUE"},
-            {text = idef["tooltip"], color = "FONT_BOOK"},
-            {text = "oid : " .. selected_item, color = "FONT_GREY"}
-        }
+        local text_to_draw = {}
+        if idef ~= nil then
+            text_to_draw = {
+                {text = idef["name"], color = "FONT_BOOK"},
+                {text = MOD_REGISTRY[ITEM_REGISTRY[selected_item]["mod"]], color = "FONT_ORANGE"},
+                {text = idef["category"], color = "FONT_BLUE"},
+                {text = idef["tooltip"], color = "FONT_BOOK"},
+                {text = "oid : " .. selected_item, color = "FONT_GREY"}
+            }
+            local sell = idef["cost"]["sell"]
+            local buy = idef["cost"]["buy"]
+            if sell ~= 0 then
+                if idef["honeycore"] == 1 then
+                    table.insert(text_to_draw, 4, {text = "Sells for $" .. sell, color = "FONT_ORANGE"})
+                else
+                    table.insert(text_to_draw, 4, {text = "Sells for £" .. sell, color = "FONT_YELLOW"})
+                end
+            end
+            if buy ~= 0 then
+                if idef["honeycore"] == 1 then
+                    table.insert(text_to_draw, 5, {text = "Buy for $" .. buy, color = "FONT_ORANGE"})
+                else
+                    table.insert(text_to_draw, 5, {text = "Buy for £" .. buy, color = "FONT_YELLOW"})
+                end
+            end
+        end
         local text_height = draw_text_lines(text_to_draw, x - 7, y + 42, 143)
+    end
+end
+
+function draw_npc_info(menu_id, x, y)
+    local selected_item = api_gp(menu_id, "selected_item")
+    if selected_item ~= nil then
+        local idef = api_get_definition(selected_item)
+        api_draw_button(api_gp(menu_id, "item_large"), false)
+        api_draw_button(api_gp(menu_id, "crafting_bench"), false)
+        api_draw_sprite(RB_ITEM_UNDERLINE, 0, x - 3, y + 37)
+        api_draw_sprite(RB_CRAFT_ARROW, 0, x + 42, y + 18)
+        for i=1,3 do
+            local ri_button = api_gp(menu_id, "recipe_item" .. i)
+            api_draw_button(ri_button, false)
+            local recipe_item = ITEM_REGISTRY[api_gp(ri_button, "text")]
+            if recipe_item ~= nil then
+                api_draw_sprite(recipe_item["sprite"], 0, x + 46 + (i - 1) * 23, y - 2)
+            end
+        end
+        api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x, y, 2, 2, 0, 0, 1)
+        
+        if RECIPE_REGISTRY[selected_item] ~= nil then
+            local crafting_bench = RECIPE_REGISTRY[selected_item]["workstations"]
+            api_draw_sprite(ITEM_REGISTRY[crafting_bench[TIMER % #crafting_bench + 1]]["sprite"], 0, x + 115, y + 21)
+        end
+        local text_to_draw = {}
+        
+        if idef ~= nil then
+            text_to_draw = {
+                {text = idef["name"], color = "FONT_BOOK"},
+                {text = MOD_REGISTRY[ITEM_REGISTRY[selected_item]["mod"]], color = "FONT_ORANGE"},
+                {text = idef["category"], color = "FONT_BLUE"},
+                {text = idef["tooltip"], color = "FONT_BOOK"},
+                {text = "oid : " .. selected_item, color = "FONT_GREY"}
+            }
+        end
+        local text_height = draw_text_lines(text_to_draw, x - 7, y + 42, 143)
+        draw_npc_shop(selected_item, x - 7, y + 42 + text_height)
+    end
+end
+
+function draw_npc_shop(selected_item, x, y)
+    local item = ""
+    local price = ""
+    local hc
+    for i=1,#NPC_REGISTRY[selected_item] do
+        item = NPC_REGISTRY[selected_item][i]["item"]
+        price = NPC_REGISTRY[selected_item][i]["buy"]
+        hc = NPC_REGISTRY[selected_item][i]["honeycore"]
+        api_draw_sprite(RB_SLOT_SPR, 0, x + 23 * ((i - 1) % 5), y + 23 * ((i - 1) // 5))
+        api_draw_sprite(ITEM_REGISTRY[item]["sprite"], 0, x + 2 + 23 * ((i - 1) % 5), y + 2 + 23 * ((i - 1) // 5))
+        if hc then
+            api_draw_number(x + 22 + 23 * ((i - 1) % 5), y + 22 + 23 * ((i - 1) // 5), "$".. math.floor(price), "FONT_ORANGE")
+        else
+            api_draw_number(x + 22 + 23 * ((i - 1) % 5), y + 22 + 23 * ((i - 1) // 5), "£".. math.floor(price), "FONT_YELLOW")
+        end
     end
 end
 
@@ -297,11 +376,18 @@ function draw_hovered_item_tooltip(menu_id)
 		local hl_button = api_get_highlighted("ui")
 		if hl_button ~= nil then
 			local item = api_gp(hl_button, "text")
-			if item ~= "" then
-				if api_gp(hl_button, "index") == 1 and item ~= nil then
-					draw_tooltip(item, menu_id)
-				end
-			end
+            if item == "rotating_workstation" then
+                if api_gp(hl_button, "index") == 1 then
+					local workstations = api_gp(menu_id, "si_workstations")
+                    if workstations ~= nil then
+                        draw_tooltip(workstations[TIMER % #workstations + 1], menu_id)
+                    end
+                end
+            elseif item ~= "" then
+                if api_gp(hl_button, "index") == 1 and item ~= nil then
+                    draw_tooltip(item, menu_id)
+                end
+            end
 		end
 	end
 end
