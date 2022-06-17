@@ -1,3 +1,5 @@
+-- item_book.lua
+
 RB_CURSOR_SPR = -1
 RB_SLOT_SPR = -1
 TEXTBOX_SIZE = 122
@@ -49,14 +51,15 @@ function recipe_book_define(menu_id)
         api_define_button(menu_id, "recipe_item" .. i, 382 + (i - 1) * 23, 25, "", "item_click", "sprites/recipe_book/rb_slot.png")
         api_sp(api_gp(menu_id, "recipe_item" .. i), "index", 1)
     end
+    set_button_text(menu_id, filter_items(""))
     api_define_button(menu_id, "button_items_up", 234, 11, "", "items_up", "sprites/recipe_book/rb_up.png")
     api_define_button(menu_id, "button_items_down", 234, 235, "", "items_down", "sprites/recipe_book/rb_down.png")
-    api_define_button(menu_id, "item_large", 334, 25, "", "cw_do_nothing", "sprites/recipe_book/rb_slot_large.png")
+    api_define_button(menu_id, "item_large", 334, 25, "", "bei_do_nothing", "sprites/recipe_book/rb_slot_large.png")
     api_define_button(menu_id, "crafting_bench", 451, 48, "rotating_workstation", "wb_item_click", "sprites/recipe_book/rb_slot.png")
     api_sp(api_gp(menu_id, "crafting_bench"), "index", 1)
     api_sp(api_gp(menu_id, "item_large"), "index", 1)
     api_log("rb", "defined buttons !!")
-    set_button_text(menu_id, filter_items(api_gp(menu_id, "search")))
+    
 end
 
 function draw_book(menu_id)
@@ -83,10 +86,14 @@ function draw_book(menu_id)
         draw_item_sprites(menu_id, mx + 174 + 2, my + 25 + 2)
         draw_hovered_item_tooltip(menu_id)
         local selected_item = api_gp(menu_id, "selected_item")
-        if ITEM_REGISTRY[selected_item]["itype"] == "npc" then
-            draw_npc_info(menu_id, mx + 334 + 4, my + 25 + 4)
-        else
-            draw_item_info(menu_id, mx + 334 + 4, my + 25 + 4)
+        if selected_item ~= nil then
+            if ITEM_REGISTRY[selected_item]["itype"] == "npc" then
+                draw_npc_info(menu_id, mx + 334 + 4, my + 25 + 4)
+            elseif ITEM_REGISTRY[selected_item]["itype"] == "bee" then
+                draw_bee_info(menu_id, mx + 334 + 4, my + 25 + 4)
+            else
+                draw_item_info(menu_id, mx + 334 + 4, my + 25 + 4)
+            end
         end
         
         -- draw arrow buttons
@@ -101,22 +108,26 @@ function draw_item_info(menu_id, x, y)
     if selected_item ~= nil then
         local idef = api_get_definition(selected_item)
         api_draw_button(api_gp(menu_id, "item_large"), false)
-        api_draw_button(api_gp(menu_id, "crafting_bench"), false)
         api_draw_sprite(RB_ITEM_UNDERLINE, 0, x - 3, y + 37)
-        api_draw_sprite(RB_CRAFT_ARROW, 0, x + 42, y + 18)
-        for i=1,3 do
-            local ri_button = api_gp(menu_id, "recipe_item" .. i)
-            api_draw_button(ri_button, false)
-            local recipe_item = ITEM_REGISTRY[api_gp(ri_button, "text")]
-            if recipe_item ~= nil then
-                api_draw_sprite(recipe_item["sprite"], 0, x + 46 + (i - 1) * 23, y - 2)
+        if RECIPE_REGISTRY[selected_item] ~= nil then
+            api_draw_button(api_gp(menu_id, "crafting_bench"), false)
+            api_draw_sprite(RB_CRAFT_ARROW, 0, x + 42, y + 18)
+            for i=1,3 do
+                local ri_button = api_gp(menu_id, "recipe_item" .. i)
+                api_draw_button(ri_button, false)
+                local recipe_item = ITEM_REGISTRY[api_gp(ri_button, "text")]
+                if recipe_item ~= nil then
+                    api_draw_sprite(recipe_item["sprite"], 0, x + 46 + (i - 1) * 23, y - 2)
+                end
             end
         end
         api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x, y, 2, 2, 0, 0, 1)
         
         if RECIPE_REGISTRY[selected_item] ~= nil then
             local crafting_bench = RECIPE_REGISTRY[selected_item]["workstations"]
-            api_draw_sprite(ITEM_REGISTRY[crafting_bench[TIMER % #crafting_bench + 1]]["sprite"], 0, x + 115, y + 21)
+            if #crafting_bench ~= 0 then
+                api_draw_sprite(ITEM_REGISTRY[crafting_bench[TIMER % #crafting_bench + 1]]["sprite"], 0, x + 115, y + 21)
+            end
         end
         local text_to_draw = {}
         if idef ~= nil then
@@ -153,15 +164,17 @@ function draw_npc_info(menu_id, x, y)
     if selected_item ~= nil then
         local idef = api_get_definition(selected_item)
         api_draw_button(api_gp(menu_id, "item_large"), false)
-        api_draw_button(api_gp(menu_id, "crafting_bench"), false)
         api_draw_sprite(RB_ITEM_UNDERLINE, 0, x - 3, y + 37)
-        api_draw_sprite(RB_CRAFT_ARROW, 0, x + 42, y + 18)
-        for i=1,3 do
-            local ri_button = api_gp(menu_id, "recipe_item" .. i)
-            api_draw_button(ri_button, false)
-            local recipe_item = ITEM_REGISTRY[api_gp(ri_button, "text")]
-            if recipe_item ~= nil then
-                api_draw_sprite(recipe_item["sprite"], 0, x + 46 + (i - 1) * 23, y - 2)
+        if RECIPE_REGISTRY[selected_item] ~= nil then
+            api_draw_button(api_gp(menu_id, "crafting_bench"), false)
+            api_draw_sprite(RB_CRAFT_ARROW, 0, x + 42, y + 18)
+            for i=1,3 do
+                local ri_button = api_gp(menu_id, "recipe_item" .. i)
+                api_draw_button(ri_button, false)
+                local recipe_item = ITEM_REGISTRY[api_gp(ri_button, "text")]
+                if recipe_item ~= nil then
+                    api_draw_sprite(recipe_item["sprite"], 0, x + 46 + (i - 1) * 23, y - 2)
+                end
             end
         end
         api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x, y, 2, 2, 0, 0, 1)
@@ -186,20 +199,63 @@ function draw_npc_info(menu_id, x, y)
     end
 end
 
+function draw_bee_info(menu_id, x, y)
+    local selected_item = api_gp(menu_id, "selected_item")
+    if selected_item ~= nil then
+        local idef = ITEM_REGISTRY[selected_item]
+        api_draw_button(api_gp(menu_id, "item_large"), false)
+        api_draw_sprite(RB_ITEM_UNDERLINE, 0, x - 3, y + 37)
+        if RECIPE_REGISTRY[selected_item] ~= nil then
+            api_draw_button(api_gp(menu_id, "crafting_bench"), false)
+            api_draw_sprite(RB_CRAFT_ARROW, 0, x + 42, y + 18)
+            for i=1,3 do
+                local ri_button = api_gp(menu_id, "recipe_item" .. i)
+                api_draw_button(ri_button, false)
+                local recipe_item = ITEM_REGISTRY[api_gp(ri_button, "text")]
+                if recipe_item ~= nil then
+                    api_draw_sprite(recipe_item["sprite"], 0, x + 46 + (i - 1) * 23, y - 2)
+                end
+            end
+        end
+        api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x - 1, y - 1, 2, 2, 0, 0, 1)
+        
+        if RECIPE_REGISTRY[selected_item] ~= nil then
+            local crafting_bench = RECIPE_REGISTRY[selected_item]["workstations"]
+            api_draw_sprite(ITEM_REGISTRY[crafting_bench[TIMER % #crafting_bench + 1]]["sprite"], 0, x + 115, y + 21)
+        end
+        local text_to_draw = {}
+        
+        if idef ~= nil then
+            text_to_draw = {
+                {text = idef["name"], color = "FONT_BOOK"},
+                {text = MOD_REGISTRY[ITEM_REGISTRY[selected_item]["mod"]], color = "FONT_ORANGE"},
+                {text = "Bee", color = "FONT_BLUE"},
+                {text = "oid : " .. selected_item, color = "FONT_GREY"}
+            }
+            if idef["req"] ~= nil and idef["req"] ~= "" then
+                table.insert(text_to_draw, 4, {text = "Bred : " .. idef["req"], color = "FONT_BOOK"})
+            end
+        end
+        local text_height = draw_text_lines(text_to_draw, x - 7, y + 42, 143)
+    end
+end
+
 function draw_npc_shop(selected_item, x, y)
     local item = ""
     local price = ""
-    local hc
-    for i=1,#NPC_REGISTRY[selected_item] do
-        item = NPC_REGISTRY[selected_item][i]["item"]
-        price = NPC_REGISTRY[selected_item][i]["buy"]
-        hc = NPC_REGISTRY[selected_item][i]["honeycore"]
-        api_draw_sprite(RB_SLOT_SPR, 0, x + 23 * ((i - 1) % 5), y + 23 * ((i - 1) // 5))
-        api_draw_sprite(ITEM_REGISTRY[item]["sprite"], 0, x + 2 + 23 * ((i - 1) % 5), y + 2 + 23 * ((i - 1) // 5))
-        if hc then
-            api_draw_number(x + 22 + 23 * ((i - 1) % 5), y + 22 + 23 * ((i - 1) // 5), "$".. math.floor(price), "FONT_ORANGE")
-        else
-            api_draw_number(x + 22 + 23 * ((i - 1) % 5), y + 22 + 23 * ((i - 1) // 5), "£".. math.floor(price), "FONT_YELLOW")
+    local hc = ""
+    if NPC_REGISTRY[selected_item] ~= nil then
+        for i=1,#NPC_REGISTRY[selected_item] do
+            item = NPC_REGISTRY[selected_item][i]["item"]
+            price = NPC_REGISTRY[selected_item][i]["buy"]
+            hc = NPC_REGISTRY[selected_item][i]["honeycore"]
+            api_draw_sprite(RB_SLOT_SPR, 0, x + 23 * ((i - 1) % 5), y + 23 * ((i - 1) // 5))
+            api_draw_sprite(ITEM_REGISTRY[item]["sprite"], 0, x + 2 + 23 * ((i - 1) % 5), y + 2 + 23 * ((i - 1) // 5))
+            if hc then
+                api_draw_number(x + 22 + 23 * ((i - 1) % 5), y + 22 + 23 * ((i - 1) // 5), "$".. math.floor(price), "FONT_ORANGE")
+            else
+                api_draw_number(x + 22 + 23 * ((i - 1) % 5), y + 22 + 23 * ((i - 1) // 5), "£".. math.floor(price), "FONT_YELLOW")
+            end
         end
     end
 end
@@ -229,7 +285,11 @@ function draw_item_sprites(menu_id, tx, ty)
         for x=1,6 do
             local item_name = api_gp(api_gp(menu_id, "item_button" .. (6 * (y - 1) + x)), "text")
             if item_name ~= "" then
-                api_draw_sprite(ITEM_REGISTRY[item_name]["sprite"], 0, tx + (x - 1) * spacing["x"], ty + (y - 1) * spacing["y"])
+                if ITEM_REGISTRY[item_name]["itype"] == "bee" then
+                    api_draw_sprite(ITEM_REGISTRY[item_name]["sprite"], 0, tx + (x - 1) * spacing["x"] - 1, ty + (y - 1) * spacing["y"] - 1)
+                else
+                    api_draw_sprite(ITEM_REGISTRY[item_name]["sprite"], 0, tx + (x - 1) * spacing["x"], ty + (y - 1) * spacing["y"])
+                end
             end
         end
     end
@@ -275,6 +335,8 @@ function type_char(menu_id, keycode)
                 move_cursor(menu_id, -1)
             end
         end
+    elseif pkey == "ENTER" then
+
     elseif pkey == "LEFT" then
         move_cursor(menu_id, -1)
     elseif pkey == "RIGHT" then
@@ -415,4 +477,11 @@ function wb_item_click(menu_id)
     if workstations ~= nil then
         set_item(menu_id, workstations[TIMER % #workstations + 1])
     end
+end
+
+function bei_do_nothing(menu_id)
+	-- hello !
+	-- if you've made it this far, good job, and i apologize for my code
+	-- good luck !
+	-- this function does nothing
 end

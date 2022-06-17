@@ -8,12 +8,16 @@ NPC_REGISTRY = {}
 BLACKLISTED_ITEMS = {
     wall7 = ".",
     debugger1 = ".",
-    bee = "."
+    bee = ".",
+    cube = ".",
+    database = "."
 }
 BLACKLISTED_PATTERNS = {
     "npc%d+s",
-    "seedling%d+"
+    "seedling%d+",
+    "inventory_%a"
 }
+CUBE_SPR = 692
 
 function register_mod(mod_id, mod_name)
     mod_name =  mod_name or mod_id
@@ -46,7 +50,7 @@ function register_item(oid, mod, itype)
             end
             ITEM_REGISTRY[oid] = {sprite = api_get_sprite("sp_" .. oid), name = idef["name"], mod = mod, itype = itype}
             local small_item = api_get_sprite("sp_" .. oid .. "_item")
-            if small_item ~= 686 then
+            if small_item ~= CUBE_SPR then
                 ITEM_REGISTRY[oid]["sprite"] = small_item
             end
             if type(idef["machines"]) == "table" then
@@ -58,13 +62,30 @@ function register_item(oid, mod, itype)
     end
 end
 
-function register_bee(bee)
-
+function register_bee(bee, stats, mod)
+    if string.sub(bee, 1, 1) ~= "_" and string.match(bee, "intro%d") == nil then
+        --api_log("bee", bee)
+        local bee_id = "bee_" .. stats["species"]
+        if ITEM_REGISTRY[bee_id] == nil and is_blacklisted(bee_id) == false then
+            --api_log(bee_id, stats)
+            local recipe = {}
+            if stats["requirement_combo"] ~= nil then
+                --api_log("rc", stats["requirement_combo"])
+                for k,v in pairs(stats["requirement_combo"]) do
+                    table.insert(recipe, {item = "bee_" .. v, amount = 1})
+                end
+                if #recipe > 0 then
+                    register_recipe(bee_id, recipe, 1, mod, {"hive1", "hive2", "hive3"})
+                end
+            end
+            ITEM_REGISTRY[bee_id] = {sprite = api_get_sprite("sp_bee_" .. bee), name = stats["title"] .. " Bee", mod = mod, itype = "bee", req = stats["requirement"]}
+        end
+    end
 end
 
 function register_npc(oid)
     local def = api_get_definition(oid)
-    api_log("shop", def)
+    --api_log("shop", def)
 end
 
 function register_npcs()
@@ -83,7 +104,9 @@ function register_npcs()
                     if item ~= "" then
                         local idef = api_get_definition(item) or {}
                         table.insert(NPC_REGISTRY[oid], {item = item, buy = idef["cost"]["buy"], honeycore = idef["honeycore"]})
-                        register_recipe(item, {}, 1, "placeholder", oid)
+                        if RECIPE_REGISTRY[item] == nil then
+                            register_recipe(item, {}, 1, "placeholder", oid)
+                        end
                     end
                 end
             end
@@ -102,14 +125,14 @@ function register_items()
             register_item(v[i], k, "item")
         end
     end
-    register_bees()
+    --register_bees()
 end
 
 function register_bees()
     local vanilla_bees = api_describe_bees(false)
-    api_log("vbees", vanilla_bees["chaotic"])
     for bee,stats in pairs(vanilla_bees) do
-        api_log("bee", bee)
+        register_bee(bee, stats, "vanilla")
+        --api_log("bee", bee)
     end
     local modded_bees = api_describe_bees(true)
     for k,v in pairs(modded_bees) do

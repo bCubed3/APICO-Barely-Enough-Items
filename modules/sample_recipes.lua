@@ -14,30 +14,30 @@ end
 
 -- function that defines example recipes
 function get_described_recipes()
-    cw_define_mod("vanilla", "Vanilla", 5)
+    register_mod("vanilla", "Vanilla")
     local mods = api_describe_mods()
     for i=1,#mods do
         if MOD_REGISTRY[i] == nil then
-            cw_define_mod(mods[i], mods[i], 5)
+            register_mod(mods[i], mods[i])
         end
     end
 
     local vanilla_recipes = api_describe_recipes(false)
-    cw_define_recipes("vanilla", vanilla_recipes)
+    register_recipes("vanilla", vanilla_recipes, {"workbench"})
     local modded_recipes = api_describe_recipes(true)
     for mod,recipes in pairs(modded_recipes) do
-        cw_define_recipes(mod, recipes)
+        register_recipes(mod, recipes, {"workbench2"})
     end
 end
 
-function cw_define_recipes(mod, mod_recipes)
+function register_recipes(mod, mod_recipes, wb)
     for tab,recipes in pairs(mod_recipes) do
         for i=1,#recipes do
             if type(mod_recipes[tab][i]) == "table" then
                 local total = mod_recipes[tab][i]["total"] or 1
                 local recipe = mod_recipes[tab][i]["recipe"]
                 local item = mod_recipes[tab][i]["item"]
-                cw_define_recipe(recipe, item, total, TABS[tab], mod)
+                register_recipe(item, recipe, total, mod, wb)
             end
         end
     end

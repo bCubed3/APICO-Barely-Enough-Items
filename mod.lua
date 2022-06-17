@@ -6,17 +6,17 @@ function register()
     return {
         name = MOD_NAME,
         hooks = {"ready", "key", "clock"},
-        modules = {"crafting", "sample_recipes", "item_book", "utils", "registry"}
+        modules = {"sample_recipes", "item_book", "utils", "registry"}
     }
 end
 
 function init()
+    prep_tooltip()
     make_keycodes()
     define_recipe_book()
     make_letter_lengths()
     api_set_devmode(true)
-    cw_define_mod("bei", "BEI", 1)
-    define_compat_workbench()
+    register_mod("bei", "BEI")
     get_described_recipes()
     --api_blacklist_input(MOD_NAME .. "_recipe_book")
     return "Success"
@@ -26,9 +26,8 @@ function ready()
     api_blacklist_input(MOD_NAME .. "_recipe_book")
     --sort_registry()
     --api_log("registry", ITEM_REGISTRY)
-    --register_bees()
+    register_bees()
     register_items()
-    filter_unused_tabs()
     register_npcs()
     api_log("shops", NPC_REGISTRY)
 end

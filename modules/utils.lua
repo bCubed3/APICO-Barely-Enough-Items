@@ -3,6 +3,18 @@
 KEYCODES = {}
 LETTER_LENGTHS = {}
 LETTERS = " 0123456789abcedfghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ;'@#.,!/\\-+_=?"
+TOOLTIP_EDGE_SPR = -1
+TOOLTIP_CENTER_SPR = -1
+TOOLTIP_ITEM_BG_SPR = -1
+TOOLTIP_EDGE_OFFSET = 3
+X_OFFSET = 60
+Y_OFFSET = 60
+
+function prep_tooltip()
+    TOOLTIP_EDGE_SPR = api_define_sprite("cw_tooltip_edge", "sprites/cw_tooltip_edge.png", 1)
+	TOOLTIP_CENTER_SPR = api_define_sprite("cw_tooltip_center", "sprites/cw_tooltip_center.png", 1)
+	TOOLTIP_ITEM_BG_SPR = api_define_sprite("tooltip_item_bg", "sprites/tooltip_item_bg.png", 1)
+end
 
 function make_keycodes()
     KEYCODES[8] = "BACKSPACE"
@@ -118,60 +130,98 @@ end
 
 function draw_tooltip(oid, menu_id)
 	local idef = api_get_definition(oid)
-	local name = idef["name"]
-    local durability = idef["durability"]
-    local sell_price = idef["cost"]
-    local machines = idef["machines"]
-    if type(sell_price) == "table" then
-        sell_price = sell_price["sell"]
-    else
-        sell_price = 0
-    end
-	local holding_shift = api_get_key_down("SHFT")
-	local tooltip = "Hold shift for info"
-	local tooltip_size = {x = 117, y = 28}
-	if holding_shift == 1 then
-		tooltip = idef["tooltip"]
-		tooltip_size["x"] = 171
-	end
-	local size = api_get_game_size()
-    local text_to_draw = {
-        {text = name, color = "FONT_WHITE"},
-        {text = MOD_REGISTRY[ITEM_REGISTRY[oid]["mod"]], color = "FONT_ORANGE"},
-        {text = idef["category"], color = "FONT_BLUE"},
-        {text = tooltip, color = "FONT_BGREY"}
-    }
-    if durability ~= nil then
-        durability = math.floor(durability)
-        table.insert(text_to_draw, {text = "Durability: " .. durability .. "/" .. durability, color = "FONT_YELLOW"})
-    end
-    if sell_price ~= 0 then
-        if idef["honeycore"] == 1 then
-            table.insert(text_to_draw, {text = "Sells for $" .. sell_price, color = "FONT_ORANGE"})
+    if idef ~= nil then
+        local name = idef["name"]
+        local durability = idef["durability"]
+        local sell_price = idef["cost"]
+        local machines = idef["machines"]
+        if type(sell_price) == "table" then
+            sell_price = sell_price["sell"]
         else
-            table.insert(text_to_draw, {text = "Sells for £" .. sell_price, color = "FONT_YELLOW"})
+            sell_price = 0
         end
-        
+        local holding_shift = api_get_key_down("SHFT")
+        local tooltip = "Hold shift for info"
+        local tooltip_size = {x = 117, y = 28}
+        if holding_shift == 1 then
+            tooltip = idef["tooltip"]
+            tooltip_size["x"] = 171
+        end
+        local size = api_get_game_size()
+        local text_to_draw = {
+            {text = name, color = "FONT_WHITE"},
+            {text = MOD_REGISTRY[ITEM_REGISTRY[oid]["mod"]], color = "FONT_ORANGE"},
+            {text = idef["category"], color = "FONT_BLUE"},
+            {text = tooltip, color = "FONT_BGREY"}
+        }
+        if durability ~= nil then
+            durability = math.floor(durability)
+            table.insert(text_to_draw, {text = "Durability: " .. durability .. "/" .. durability, color = "FONT_YELLOW"})
+        end
+        if sell_price ~= 0 then
+            if idef["honeycore"] == 1 then
+                table.insert(text_to_draw, {text = "Sells for $" .. sell_price, color = "FONT_ORANGE"})
+            else
+                table.insert(text_to_draw, {text = "Sells for £" .. sell_price, color = "FONT_YELLOW"})
+            end
+        end
+        if #machines ~= 0 and holding_shift == 1 then
+            table.insert(text_to_draw, {text = "Use with:", color = "FONT_GREY"})
+        end
+        tooltip_size["y"] = get_text_height(text_to_draw, tooltip_size["x"] - 3) + 2
+        --api_log("machines", machines)
+        if #machines ~= 0 then
+            tooltip_size["y"] = tooltip_size["y"] + 21
+        end
+        local left = size["width"] - tooltip_size["x"] - TOOLTIP_EDGE_OFFSET
+        local top = size["height"] - tooltip_size["y"] - TOOLTIP_EDGE_OFFSET
+        api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left, top - 1, tooltip_size["x"], 1, 0, 1, 1)
+        api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left, top + tooltip_size["y"], tooltip_size["x"], 1, 0, 1, 1)
+        api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left - 1, top, 1, tooltip_size["y"], 0, 1, 1)
+        api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left + tooltip_size["x"], top, 1, tooltip_size["y"], 0, 1, 1)
+        api_draw_sprite_ext(TOOLTIP_CENTER_SPR, 0, left, top, tooltip_size["x"], tooltip_size["y"], 0, 0, 0.9)
+        draw_text_lines(text_to_draw, left + 3, top + 2, tooltip_size["x"] - 3)
+        if #machines ~= 0 then
+            draw_sprite_list(machines, left + 3, top + tooltip_size["y"] - 21)
+        end
+    elseif ITEM_REGISTRY[oid]["itype"] == "bee" then
+        draw_bee_tooltip(oid, menu_id)
     end
-    if #machines ~= 0 and holding_shift == 1 then
-        table.insert(text_to_draw, {text = "Use with:", color = "FONT_GREY"})
-    end
-    tooltip_size["y"] = get_text_height(text_to_draw, tooltip_size["x"] - 3) + 2
-    --api_log("machines", machines)
-    if #machines ~= 0 then
-        tooltip_size["y"] = tooltip_size["y"] + 21
-    end
-	local left = size["width"] - tooltip_size["x"] - TOOLTIP_EDGE_OFFSET
-	local top = size["height"] - tooltip_size["y"] - TOOLTIP_EDGE_OFFSET
-	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left, top - 1, tooltip_size["x"], 1, 0, 1, 1)
-	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left, top + tooltip_size["y"], tooltip_size["x"], 1, 0, 1, 1)
-	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left - 1, top, 1, tooltip_size["y"], 0, 1, 1)
-	api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left + tooltip_size["x"], top, 1, tooltip_size["y"], 0, 1, 1)
-	api_draw_sprite_ext(TOOLTIP_CENTER_SPR, 0, left, top, tooltip_size["x"], tooltip_size["y"], 0, 0, 0.9)
-	local camera_pos = api_get_camera_position()
-	local player_pos = api_get_player_position()
-    draw_text_lines(text_to_draw, left + 3, top + 2, tooltip_size["x"] - 3)
-    if #machines ~= 0 then
-        draw_sprite_list(machines, left + 3, top + tooltip_size["y"] - 21)
+end
+
+function draw_bee_tooltip(oid, menu_id)
+    local idef = ITEM_REGISTRY[oid]
+    if idef ~= nil then
+        local name = idef["name"]
+        local holding_shift = api_get_key_down("SHFT")
+        local tooltip = "Hold shift to view traits"
+        local tooltip_size = {x = 117, y = 28}
+        local machines = {"beehive1", "hive1"}
+        if holding_shift == 1 then
+            tooltip = "Release shift to hide traits"
+        end
+        local size = api_get_game_size()
+        local text_to_draw = {
+            {text = name, color = "FONT_WHITE"},
+            {text = MOD_REGISTRY[ITEM_REGISTRY[oid]["mod"]], color = "FONT_ORANGE"},
+            {text = "Bee", color = "FONT_BLUE"}
+            --{text = tooltip, color = "FONT_BGREY"}
+        }
+        tooltip_size["y"] = get_text_height(text_to_draw, tooltip_size["x"] - 3) + 2
+        --api_log("machines", machines)
+        if #machines ~= 0 then
+            tooltip_size["y"] = tooltip_size["y"] + 21
+        end
+        local left = size["width"] - tooltip_size["x"] - TOOLTIP_EDGE_OFFSET
+        local top = size["height"] - tooltip_size["y"] - TOOLTIP_EDGE_OFFSET
+        api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left, top - 1, tooltip_size["x"], 1, 0, 1, 1)
+        api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left, top + tooltip_size["y"], tooltip_size["x"], 1, 0, 1, 1)
+        api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left - 1, top, 1, tooltip_size["y"], 0, 1, 1)
+        api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left + tooltip_size["x"], top, 1, tooltip_size["y"], 0, 1, 1)
+        api_draw_sprite_ext(TOOLTIP_CENTER_SPR, 0, left, top, tooltip_size["x"], tooltip_size["y"], 0, 0, 0.9)
+        draw_text_lines(text_to_draw, left + 3, top + 2, tooltip_size["x"] - 3)
+        if #machines ~= 0 then
+            draw_sprite_list(machines, left + 3, top + tooltip_size["y"] - 21)
+        end
     end
 end
