@@ -3,6 +3,7 @@
 RB_CURSOR_SPR = -1
 RB_SLOT_SPR = -1
 TEXTBOX_SIZE = 122
+RB_MENU = -1
 
 
 function prep_recipe_book()
@@ -10,6 +11,15 @@ function prep_recipe_book()
     RB_SLOT_SPR = api_define_sprite("rb_slot", "sprites/recipe_book/rb_slot.png", 2)
     RB_CRAFT_ARROW = api_define_sprite("rb_craft_arrow", "sprites/recipe_book/rb_craft_arrow.png", 1)
     RB_ITEM_UNDERLINE = api_define_sprite("rb_item_underline", "sprites/recipe_book/rb_item_underline.png", 1)
+end
+
+function create_recipe_book()
+    api_create_obj(MOD_NAME .. "_recipe_book", 0, 0)
+    api_library_add_book("recipe_book", "open_recipe_book", "sprites/recipe_book/recipe_book_button.png")
+end
+
+function open_recipe_book()
+    api_toggle_menu(RB_MENU, true)
 end
 
 function define_recipe_book()
@@ -59,7 +69,13 @@ function recipe_book_define(menu_id)
     api_sp(api_gp(menu_id, "crafting_bench"), "index", 1)
     api_sp(api_gp(menu_id, "item_large"), "index", 1)
     api_log("rb", "defined buttons !!")
-    
+    RB_MENU = menu_id
+    local objs = api_get_menu_objects()
+    for i=1,#objs do
+        if objs[i]["oid"] == MOD_NAME .. "_recipe_book" then
+            api_set_immortal(objs[i]["id"], true)
+        end
+    end
 end
 
 function draw_book(menu_id)

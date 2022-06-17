@@ -135,9 +135,9 @@ function register_bees()
         --api_log("bee", bee)
     end
     local modded_bees = api_describe_bees(true)
-    for k,v in pairs(modded_bees) do
-        for i=1,#v do
-            
+    for mod,bees in pairs(modded_bees) do
+        for bee,stats in pairs(bees) do
+            register_bee(bee, stats, mod)
         end
     end
 end
