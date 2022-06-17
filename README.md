@@ -1,32 +1,17 @@
 # Barely Enough Items
- A list of all* items in the game, along with descriptions and recipes.
+ A list of all items in the game, along with descriptions and recipes.
  
- *Not all items are implemented yet.
-
-# Compatibility workbench
- A workbench that lets different mods define their own recipes.
+ Currently only shows vanilla and modded crafting recipes. Modders can add their own custom machine recipes with the following syntax :
+ ```lua
+ ---@param mod_id string the mod id of your mod
+ ---@param mod_name string the name of your mod to be displayed
+ register_mod("bei", "Barely Enough Items")
+ ---@param out string the oid of the output item
+ ---@param _recipe table the recipe table
+ ---@param _amt number the amount produced of the output item
+ ---@param _mod string the mod_id of the mod adding the recipe
+ ---@param _workstations table the list of machines this recipe work in
+ register_recipe("planks1", {{item = "log", amount = 1}}, 2, "vanilla", {"sawbench", "sawmill", "sawmill2"}) 
+ ```
+ Do note that this only tells BEI to show the recipe. It does not actually create the recipe in the machine.
  
-Usage :
- - define your mod and the number of tabs you want (up to 5)
- - define your recipes (up to 20 per tab)
-Please remember to define recipes AFTER DEFINING EVERYTHING ELSE IN YOUR MOD.
-Example code :
-```lua
--- function that defines example recipes
-function define_sample_recipes()
-    -- define your mod with cw_define_mod(mod_name : string, tabs_num : int)
-    cw_define_mod("modCubed", 2)
-    cw_define_mod("foo", 5)
-    -- define recipes with :
-    -- cw_define_recipe({{item = "item1", amount = amt1}, {item = "item2", amount = amt2}, {item = "item3", amount = amt3}},
-    --                  output_item : string,
-    --                  output_amt : int,
-    --                  tab : int,
-    --                  mod : string)
-    -- remember to prepend your mod_name if you are using modded items
-    cw_define_recipe({{item = "log", amount = 5}}, "stone", 1, 1, "modCubed")
-    cw_define_recipe({{item = "stone", amount = 5}, {item = "waterproof", amount = 7}, {item = "planks2", amount = 10}}, "glue", 2, 1, "modCubed")
-    cw_define_recipe({{item = "glue", amount= 2}, {item = "stone", amount = 15}}, "canister1", 1, 1, "foo")
-    cw_define_recipe({{item = "log", amount = 1}}, "log", 2, 2, "modCubed")
-end
-```
