@@ -29,7 +29,7 @@ function ready()
     register_bees()
     register_items()
     register_npcs()
-    api_log("shops", NPC_REGISTRY)
+    create_recipe_book()
 end
 
 function key(keycode)
