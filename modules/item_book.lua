@@ -16,6 +16,7 @@ end
 function create_recipe_book()
     api_create_obj(MOD_NAME .. "_recipe_book", 0, 0)
     api_library_add_book("recipe_book", "open_recipe_book", "sprites/recipe_book/recipe_book_button.png")
+    api_blacklist_input(MOD_NAME .. "_recipe_book")
 end
 
 function open_recipe_book()

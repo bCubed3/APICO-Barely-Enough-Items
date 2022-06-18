@@ -22,7 +22,6 @@ function init()
 end
 
 function ready()
-    api_blacklist_input(MOD_NAME .. "_recipe_book")
     --sort_registry()
     --api_log("registry", ITEM_REGISTRY)
     register_bees()
