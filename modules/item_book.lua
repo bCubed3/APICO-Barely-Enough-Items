@@ -37,7 +37,8 @@ function define_recipe_book()
         buttons = {"Close", "Move"},
         info = {},
         tools = {"mouse1", "hammer1"},
-        placeable = true
+        placeable = true,
+        invisible = true
     }, "sprites/recipe_book/recipe_book.png", "sprites/recipe_book/recipe_book_gui.png", {
         define = "recipe_book_define",
         draw = "draw_book"

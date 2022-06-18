@@ -50,14 +50,14 @@ function register_item(oid, mod, itype)
             if oid == "npc1" then
                 register_npc(oid)
             end
-            ITEM_REGISTRY[oid] = {sprite = api_get_sprite("sp_" .. oid), name = idef["name"], mod = mod, itype = itype}
+            ITEM_REGISTRY[oid] = {sprite = api_get_sprite("sp_" .. oid), name = idef["name"], mod = mod, itype = itype, tooltip = idef["tooltip"]}
             local small_item = api_get_sprite("sp_" .. oid .. "_item")
             if small_item ~= CUBE_SPR then
                 ITEM_REGISTRY[oid]["sprite"] = small_item
             end
             if type(idef["machines"]) == "table" then
                 for i=1, #idef["machines"] do
-                    register_item(idef["machines"][i])
+                    --register_item(idef["machines"][i])
                 end
             end
         end
@@ -162,8 +162,9 @@ end
 function get_filters(filter_raw)
     local _oid, filter_out = get_filter(filter_raw, ";[%a%d_]*")
     local _mod, filter_out = get_filter(filter_out, "@[%a%d_]*")
+    local _tooltip, filter_out = get_filter(filter_out, ",%[.+%]")
     --local _tooltip, filter_out = get_filter_tl(filter_out, "#'[%a%d_ ]'")
-    return {oid = _oid, mod = _mod}, string.match(filter_out, "%S?.*%S?") --string.match(filter_out, "%S.*%S")
+    return {oid = _oid, mod = _mod, tooltip = _tooltip}, string.match(filter_out, "%S?.*%S?") --string.match(filter_out, "%S.*%S")
 end
 
 function get_filter(filter_raw, filter_pattern)
@@ -215,8 +216,9 @@ end
 
 function filter_items_tooltip(filter, item_reg)
     local out = {}
+    filter = string.sub(filter, 2, -2)
     for k,v in pairs(item_reg) do
-        if string.find(string.lower(api_get_definition(k)["tooltip"]), filter) ~= nil then
+        if item_reg[k]["tooltip"] ~= nil and string.find(string.lower(item_reg[k]["tooltip"]), filter) ~= nil then
             out[k] = v
         end
     end

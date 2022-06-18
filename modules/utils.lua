@@ -2,7 +2,7 @@
 
 KEYCODES = {}
 LETTER_LENGTHS = {}
-LETTERS = " 0123456789abcedfghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ;'@#.,!/\\-+_=?"
+LETTERS = " 0123456789abcedfghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ;'@#.,!/\\-+_=?[]"
 TOOLTIP_EDGE_SPR = -1
 TOOLTIP_CENTER_SPR = -1
 TOOLTIP_ITEM_BG_SPR = -1
@@ -32,6 +32,8 @@ function make_keycodes()
     KEYCODES[188] = ","
     KEYCODES[189] = "-"
     KEYCODES[187] = "="
+    KEYCODES[219] = "["
+    KEYCODES[221] = "]"
     KEYCODES[222] = "'"
     KEYCODES[250] = "@"
     KEYCODES[251] = "#"
@@ -49,7 +51,8 @@ function make_letter_lengths()
             LETTER_LENGTHS[letter] = 1
         elseif letter == " " or letter == ";" or letter == "," then
             LETTER_LENGTHS[letter] = 2
-        elseif letter == "i" or letter == "l" or letter == "1" or letter == "$" or letter == "-" or letter == "+" then
+        elseif letter == "i" or letter == "l" or letter == "1" or letter == "$" or letter == "-"
+        or letter == "+" or letter == "[" or letter == "]" then
             LETTER_LENGTHS[letter] = 3
         elseif letter == "j" or letter == "k" then
             LETTER_LENGTHS[letter] = 4
