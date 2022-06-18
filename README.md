@@ -1,7 +1,8 @@
 # Barely Enough Items
  A list of all items in the game, along with descriptions and recipes.
  
- Currently only shows vanilla and modded crafting recipes. Modders can add their own custom machine recipes with the following syntax :
+ By default only shows vanilla and modded crafting recipes.
+ Modders can add their own custom machine recipes with the following syntax :
  ```lua
  -- How to register your mod :
  ---@param mod_id string the mod id of your mod
