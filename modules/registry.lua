@@ -10,7 +10,9 @@ BLACKLISTED_ITEMS = {
     debugger1 = ".",
     bee = ".",
     cube = ".",
-    database = "."
+    database = ".",
+    tree = ".",
+    tapper = "."
 }
 BLACKLISTED_PATTERNS = {
     "npc%d+s",

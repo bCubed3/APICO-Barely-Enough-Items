@@ -154,8 +154,12 @@ function draw_item_info(menu_id, x, y)
                 {text = idef["tooltip"], color = "FONT_BOOK"},
                 {text = "oid : " .. selected_item, color = "FONT_GREY"}
             }
-            local sell = idef["cost"]["sell"]
-            local buy = idef["cost"]["buy"]
+            local sell = 0
+            local buy = 0
+            if idef["cost"] ~= nil then
+                sell = idef["cost"]["sell"]
+                buy = idef["cost"]["buy"]
+            end
             if sell ~= 0 then
                 if idef["honeycore"] == 1 then
                     table.insert(text_to_draw, 4, {text = "Sells for $" .. sell, color = "FONT_ORANGE"})
