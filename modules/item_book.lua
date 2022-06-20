@@ -120,13 +120,14 @@ function draw_book(menu_id)
     end
 end
 
-function draw_item_info(menu_id, x, y)
-    local selected_item = api_gp(menu_id, "selected_item")
+function draw_info(menu_id, x, y, selected_item, recipe, text)
     if selected_item ~= nil then
-        local idef = api_get_definition(selected_item)
+        --local idef = api_get_definition(selected_item)
         api_draw_button(api_gp(menu_id, "item_large"), false)
+        api_log("itype", ITEM_REGISTRY[selected_item]["itype"])
         api_draw_sprite(RB_ITEM_UNDERLINE, 0, x - 3, y + 37)
-        if RECIPE_REGISTRY[selected_item] ~= nil then
+        
+        if recipe ~= nil then
             api_draw_button(api_gp(menu_id, "crafting_bench"), false)
             api_draw_sprite(RB_CRAFT_ARROW, 0, x + 42, y + 18)
             for i=1,3 do
@@ -134,18 +135,43 @@ function draw_item_info(menu_id, x, y)
                 api_draw_button(ri_button, false)
                 local recipe_item = ITEM_REGISTRY[api_gp(ri_button, "text")]
                 if recipe_item ~= nil then
-                    api_draw_sprite(recipe_item["sprite"], 0, x + 46 + (i - 1) * 23, y - 2)
+                    if recipe_item["itype"] == "bee" then
+                        api_draw_sprite(recipe_item["sprite"], 0, x + 46 + (i - 1) * 23 - 1, y - 2 - 1)
+                    else
+                        api_draw_sprite(recipe_item["sprite"], 0, x + 46 + (i - 1) * 23, y - 2)
+                    end
+                end
+            end
+            for i=1,3 do
+                if recipe["recipe"][i] ~= nil and recipe["recipe"][i]["amount"] > 1 then
+                    api_draw_number(x + 42 + (i) * 23, y - 2 + 20, recipe["recipe"][i]["amount"])
                 end
             end
         end
-        api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x, y, 2, 2, 0, 0, 1)
+        if ITEM_REGISTRY[selected_item]["itype"] == "bee" then
+            api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x - 2, y - 2, 2, 2, 0, 0, 1)
+        else
+            api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x, y, 2, 2, 0, 0, 1)
+        end
+        if recipe ~= nil and recipe["amount"] > 1 then
+            api_draw_number(x + 37, y + 38, recipe["amount"])
+        end
         
-        if RECIPE_REGISTRY[selected_item] ~= nil then
-            local crafting_bench = RECIPE_REGISTRY[selected_item]["workstations"]
+        if recipe ~= nil then
+            local crafting_bench = recipe["workstations"]
             if #crafting_bench ~= 0 then
                 api_draw_sprite(ITEM_REGISTRY[crafting_bench[TIMER % #crafting_bench + 1]]["sprite"], 0, x + 115, y + 21)
             end
         end
+        local text_height = draw_text_lines(text, x - 7, y + 42, 143)
+        return text_height
+    end
+end
+
+function draw_item_info(menu_id, x, y)
+    local selected_item = api_gp(menu_id, "selected_item")
+    if selected_item ~= nil then
+        local idef = api_get_definition(selected_item)
         local text_to_draw = {}
         if idef ~= nil then
             text_to_draw = {
@@ -176,7 +202,7 @@ function draw_item_info(menu_id, x, y)
                 end
             end
         end
-        local text_height = draw_text_lines(text_to_draw, x - 7, y + 42, 143)
+        local text_height = draw_info(menu_id, x, y, selected_item, RECIPE_REGISTRY[selected_item], text_to_draw)
     end
 end
 
@@ -184,28 +210,7 @@ function draw_npc_info(menu_id, x, y)
     local selected_item = api_gp(menu_id, "selected_item")
     if selected_item ~= nil then
         local idef = api_get_definition(selected_item)
-        api_draw_button(api_gp(menu_id, "item_large"), false)
-        api_draw_sprite(RB_ITEM_UNDERLINE, 0, x - 3, y + 37)
-        if RECIPE_REGISTRY[selected_item] ~= nil then
-            api_draw_button(api_gp(menu_id, "crafting_bench"), false)
-            api_draw_sprite(RB_CRAFT_ARROW, 0, x + 42, y + 18)
-            for i=1,3 do
-                local ri_button = api_gp(menu_id, "recipe_item" .. i)
-                api_draw_button(ri_button, false)
-                local recipe_item = ITEM_REGISTRY[api_gp(ri_button, "text")]
-                if recipe_item ~= nil then
-                    api_draw_sprite(recipe_item["sprite"], 0, x + 46 + (i - 1) * 23, y - 2)
-                end
-            end
-        end
-        api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x, y, 2, 2, 0, 0, 1)
-        
-        if RECIPE_REGISTRY[selected_item] ~= nil then
-            local crafting_bench = RECIPE_REGISTRY[selected_item]["workstations"]
-            api_draw_sprite(ITEM_REGISTRY[crafting_bench[TIMER % #crafting_bench + 1]]["sprite"], 0, x + 115, y + 21)
-        end
         local text_to_draw = {}
-        
         if idef ~= nil then
             text_to_draw = {
                 {text = idef["name"], color = "FONT_BOOK"},
@@ -215,7 +220,7 @@ function draw_npc_info(menu_id, x, y)
                 {text = "oid : " .. selected_item, color = "FONT_GREY"}
             }
         end
-        local text_height = draw_text_lines(text_to_draw, x - 7, y + 42, 143)
+        local text_height = draw_info(menu_id, x, y, selected_item, RECIPE_REGISTRY[selected_item], text_to_draw)
         draw_npc_shop(selected_item, x - 7, y + 42 + text_height)
     end
 end
@@ -224,28 +229,7 @@ function draw_bee_info(menu_id, x, y)
     local selected_item = api_gp(menu_id, "selected_item")
     if selected_item ~= nil then
         local idef = ITEM_REGISTRY[selected_item]
-        api_draw_button(api_gp(menu_id, "item_large"), false)
-        api_draw_sprite(RB_ITEM_UNDERLINE, 0, x - 3, y + 37)
-        if RECIPE_REGISTRY[selected_item] ~= nil then
-            api_draw_button(api_gp(menu_id, "crafting_bench"), false)
-            api_draw_sprite(RB_CRAFT_ARROW, 0, x + 42, y + 18)
-            for i=1,3 do
-                local ri_button = api_gp(menu_id, "recipe_item" .. i)
-                api_draw_button(ri_button, false)
-                local recipe_item = ITEM_REGISTRY[api_gp(ri_button, "text")]
-                if recipe_item ~= nil then
-                    api_draw_sprite(recipe_item["sprite"], 0, x + 46 + (i - 1) * 23, y - 2)
-                end
-            end
-        end
-        api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x - 1, y - 1, 2, 2, 0, 0, 1)
-        
-        if RECIPE_REGISTRY[selected_item] ~= nil then
-            local crafting_bench = RECIPE_REGISTRY[selected_item]["workstations"]
-            api_draw_sprite(ITEM_REGISTRY[crafting_bench[TIMER % #crafting_bench + 1]]["sprite"], 0, x + 115, y + 21)
-        end
         local text_to_draw = {}
-        
         if idef ~= nil then
             text_to_draw = {
                 {text = idef["name"], color = "FONT_BOOK"},
@@ -257,7 +241,7 @@ function draw_bee_info(menu_id, x, y)
                 table.insert(text_to_draw, 4, {text = "Bred : " .. idef["req"], color = "FONT_BOOK"})
             end
         end
-        local text_height = draw_text_lines(text_to_draw, x - 7, y + 42, 143)
+        local text_height = draw_info(menu_id, x, y, selected_item, RECIPE_REGISTRY[selected_item], text_to_draw)
     end
 end
 

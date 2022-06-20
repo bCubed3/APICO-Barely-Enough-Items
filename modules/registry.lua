@@ -79,8 +79,16 @@ function register_bee(bee, stats, mod)
                 if #recipe > 0 then
                     register_recipe(bee_id, recipe, 1, mod, {"hive1", "hive2", "hive3"})
                 end
+            ITEM_REGISTRY[bee_id] = {
+                sprite = api_get_sprite("sp_bee_" .. bee),
+                name = stats["title"] .. " Bee",
+                mod = mod,
+                itype = "bee",
+                req = stats["requirement"],
+                product = stats["product"]
+            }
             end
-            ITEM_REGISTRY[bee_id] = {sprite = api_get_sprite("sp_bee_" .. bee), name = stats["title"] .. " Bee", mod = mod, itype = "bee", req = stats["requirement"]}
+            register_recipe(stats["product"], {{item = bee_id, amount = 1}}, 1, mod, {"hive1", "hive2"})
         end
     end
 end
@@ -162,7 +170,7 @@ end
 function get_filters(filter_raw)
     local _oid, filter_out = get_filter(filter_raw, ";[%a%d_]*")
     local _mod, filter_out = get_filter(filter_out, "@[%a%d_]*")
-    local _tooltip, filter_out = get_filter(filter_out, ",%[.+%]")
+    local _tooltip, filter_out = get_filter(filter_out, ",%[.+%]?")
     --local _tooltip, filter_out = get_filter_tl(filter_out, "#'[%a%d_ ]'")
     return {oid = _oid, mod = _mod, tooltip = _tooltip}, string.match(filter_out, "%S?.*%S?") --string.match(filter_out, "%S.*%S")
 end
