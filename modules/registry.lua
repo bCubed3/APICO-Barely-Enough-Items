@@ -66,7 +66,7 @@ end
 
 function register_bee(bee, stats, mod)
     if string.sub(bee, 1, 1) ~= "_" and string.match(bee, "intro%d") == nil then
-        --api_log("bee", bee)
+        api_log(bee, stats["bid"])
         local bee_id = "bee_" .. stats["species"]
         if ITEM_REGISTRY[bee_id] == nil and is_blacklisted(bee_id) == false then
             --api_log(bee_id, stats)
@@ -111,7 +111,7 @@ function register_npcs()
                 ITEM_REGISTRY[oid]["itype"] = "npc"
                 for j=2,#slots do
                     local item = slots[j]["item"]
-                    if item ~= "" then
+                    if item ~= "" and item["cost"] ~= nil then
                         local idef = api_get_definition(item) or {}
                         table.insert(NPC_REGISTRY[oid], {item = item, buy = idef["cost"]["buy"], honeycore = idef["honeycore"]})
                         if RECIPE_REGISTRY[item] == nil then

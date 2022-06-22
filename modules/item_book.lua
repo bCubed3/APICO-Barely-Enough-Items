@@ -124,7 +124,6 @@ function draw_info(menu_id, x, y, selected_item, recipe, text)
     if selected_item ~= nil then
         --local idef = api_get_definition(selected_item)
         api_draw_button(api_gp(menu_id, "item_large"), false)
-        api_log("itype", ITEM_REGISTRY[selected_item]["itype"])
         api_draw_sprite(RB_ITEM_UNDERLINE, 0, x - 3, y + 37)
         
         if recipe ~= nil then
