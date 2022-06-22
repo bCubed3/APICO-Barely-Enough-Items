@@ -79,6 +79,7 @@ function register_bee(bee, stats, mod)
                 if #recipe > 0 then
                     register_recipe(bee_id, recipe, 1, mod, {"hive1", "hive2", "hive3"})
                 end
+            end
             ITEM_REGISTRY[bee_id] = {
                 sprite = api_get_sprite("sp_bee_" .. bee),
                 name = stats["title"] .. " Bee",
@@ -87,7 +88,7 @@ function register_bee(bee, stats, mod)
                 req = stats["requirement"],
                 product = stats["product"]
             }
-            end
+            api_log(bee, "bee defined !")
             register_recipe(stats["product"], {{item = bee_id, amount = 1}}, 1, mod, {"hive1", "hive2"})
         end
     end
@@ -142,7 +143,6 @@ function register_bees()
     local vanilla_bees = api_describe_bees(false)
     for bee,stats in pairs(vanilla_bees) do
         register_bee(bee, stats, "vanilla")
-        --api_log("bee", bee)
     end
     local modded_bees = api_describe_bees(true)
     for mod,bees in pairs(modded_bees) do
