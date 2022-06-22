@@ -66,7 +66,7 @@ end
 
 function register_bee(bee, stats, mod)
     if string.sub(bee, 1, 1) ~= "_" and string.match(bee, "intro%d") == nil then
-        api_log(bee, stats["bid"])
+        --api_log(bee, stats["bid"])
         local bee_id = "bee_" .. stats["species"]
         if ITEM_REGISTRY[bee_id] == nil and is_blacklisted(bee_id) == false then
             --api_log(bee_id, stats)
@@ -88,7 +88,7 @@ function register_bee(bee, stats, mod)
                 req = stats["requirement"],
                 product = stats["product"]
             }
-            api_log(bee, "bee defined !")
+            --api_log(bee, "bee defined !")
             register_recipe(stats["product"], {{item = bee_id, amount = 1}}, 1, mod, {"hive1", "hive2"})
         end
     end
@@ -112,8 +112,8 @@ function register_npcs()
                 ITEM_REGISTRY[oid]["itype"] = "npc"
                 for j=2,#slots do
                     local item = slots[j]["item"]
-                    if item ~= "" and item["cost"] ~= nil then
-                        local idef = api_get_definition(item) or {}
+                    local idef = api_get_definition(item) or {}
+                    if item ~= "" and idef["cost"] ~= nil then
                         table.insert(NPC_REGISTRY[oid], {item = item, buy = idef["cost"]["buy"], honeycore = idef["honeycore"]})
                         if RECIPE_REGISTRY[item] == nil then
                             register_recipe(item, {}, 1, "placeholder", oid)
