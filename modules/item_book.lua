@@ -56,6 +56,7 @@ function recipe_book_define(menu_id)
     api_dp(menu_id, "bei_scroll", 0)
     api_dp(menu_id, "search_results", nil)
     api_dp(menu_id, "si_workstations", nil)
+    api_dp(menu_id, "text_scroll", 0)
     api_log("rb", "defining buttons ...")
     define_items_buttons(menu_id, 174, 25)
     for i=1,3 do
@@ -67,6 +68,8 @@ function recipe_book_define(menu_id)
     api_define_button(menu_id, "button_items_down", 234, 235, "", "items_down", "sprites/recipe_book/rb_down.png")
     api_define_button(menu_id, "item_large", 334, 25, "", "bei_do_nothing", "sprites/recipe_book/rb_slot_large.png")
     api_define_button(menu_id, "crafting_bench", 451, 48, "rotating_workstation", "wb_item_click", "sprites/recipe_book/rb_slot.png")
+    api_define_button(menu_id, "text_down", 387, 243, "", "text_down", "sprites/recipe_book/rb_down.png")
+    api_define_button(menu_id, "text_up", 405, 243, "", "text_up", "sprites/recipe_book/rb_up.png")
     api_sp(api_gp(menu_id, "crafting_bench"), "index", 1)
     api_sp(api_gp(menu_id, "item_large"), "index", 1)
     api_log("rb", "defined buttons !!")
@@ -162,7 +165,24 @@ function draw_info(menu_id, x, y, selected_item, recipe, text)
                 api_draw_sprite(ITEM_REGISTRY[crafting_bench[TIMER % #crafting_bench + 1]]["sprite"], 0, x + 115, y + 21)
             end
         end
-        local text_height = draw_text_lines(text, x - 7, y + 42, 143)
+        local num_lines = get_lines_height(text, 143)
+        local text_height = 0
+        local text_scroll = api_gp(menu_id, "text_scroll")
+        --api_log("ts", text_scroll)
+        if num_lines > 12 then
+            api_draw_button(api_gp(menu_id, "text_down"), false)
+            api_draw_button(api_gp(menu_id, "text_up"), false)
+            if text_scroll > num_lines - 12 then
+                api_sp(menu_id, "text_scroll", num_lines - 12)
+                text_scroll = num_lines - 12
+            end
+            text_height = draw_text_lines(text, x - 7, y + 42, 143, text_scroll, 12)
+        else
+            if text_scroll > 0 then
+                api_sp(menu_id, "text_scroll", 0)
+            end
+            text_height = draw_text_lines(text, x - 7, y + 42, 143, 0, 12)
+        end
         return text_height
     end
 end
@@ -423,6 +443,7 @@ end
 function set_item(menu_id, item)
     if item ~= nil then
         api_sp(menu_id, "selected_item", item)
+        api_sp(menu_id, "text_scroll", 0)
         local recipe = RECIPE_REGISTRY[item]
         for i=1,3 do
             if recipe ~= nil and i <= #recipe["recipe"] then
@@ -483,6 +504,18 @@ function wb_item_click(menu_id)
     if workstations ~= nil then
         set_item(menu_id, workstations[TIMER % #workstations + 1])
     end
+end
+
+function text_up(menu_id)
+    local text_scroll = api_gp(menu_id, "text_scroll")
+    if text_scroll >= 1 then
+        api_sp(menu_id, "text_scroll", text_scroll - 1)
+    end
+end
+
+function text_down(menu_id)
+    local text_scroll = api_gp(menu_id, "text_scroll")
+    api_sp(menu_id, "text_scroll", text_scroll + 1)
 end
 
 function bei_do_nothing(menu_id)
