@@ -230,14 +230,16 @@ function draw_bee_info(menu_id, x, y)
         local idef = ITEM_REGISTRY[selected_item]
         local text_to_draw = {}
         if idef ~= nil then
+            --api_log("desc", idef["desc"])
             text_to_draw = {
                 {text = idef["name"], color = "FONT_BOOK"},
                 {text = MOD_REGISTRY[ITEM_REGISTRY[selected_item]["mod"]], color = "FONT_ORANGE"},
                 {text = "Bee", color = "FONT_BLUE"},
+                {text = idef["desc"], color = "FONT_BOOK"},
                 {text = "oid : " .. selected_item, color = "FONT_GREY"}
             }
             if idef["req"] ~= nil and idef["req"] ~= "" then
-                table.insert(text_to_draw, 4, {text = "Bred : " .. idef["req"], color = "FONT_BOOK"})
+                table.insert(text_to_draw, 5, {text = "Bred : " .. idef["req"], color = "FONT_BOOK"})
             end
         end
         local text_height = draw_info(menu_id, x, y, selected_item, RECIPE_REGISTRY[selected_item], text_to_draw)
