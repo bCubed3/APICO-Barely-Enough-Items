@@ -111,14 +111,46 @@ function get_text_height(text_lines, width)
     return spacer * spacing
 end
 
-function draw_text_lines(text_lines, x, y, width)
+function get_lines_height(text_lines, width)
     local spacer = 0
-    local spacing = 13
     for i=1,#text_lines do
         if text_lines[i]["text"] ~= nil then
-            api_draw_text(x, y + spacer * spacing, text_lines[i]["text"], false, text_lines[i]["color"], width)
             spacer = spacer + get_string_height(text_lines[i]["text"], width)
         end
+    end
+    return spacer
+end
+
+function draw_text_lines(text_lines, x, y, width, starting_line, num_lines)
+    starting_line = starting_line or 0
+    local spacing = 13
+    local spacer = 0
+    for i=1,#text_lines do
+        local str = text_lines[i]["text"]
+        local col = text_lines[i]["color"]
+        local out = 0
+        local line_length = 0
+        local word_length = 0
+        local line_out = ""
+        for word in string.gmatch(str, "%S+") do
+            word_length = get_string_px(word) + 3
+            if line_length + word_length < width - 3 then
+                line_length = line_length + word_length
+                line_out = line_out .. word .. " "
+            else
+                if starting_line <= spacer and spacer <= num_lines + starting_line then
+                    api_draw_text(x, y + spacing * (spacer - starting_line), line_out, false, col)
+                end
+                spacer = spacer + 1
+                line_out = word .. " "
+                line_length = word_length
+                out = out + 1
+            end
+        end
+        if starting_line <= spacer and spacer <= num_lines + starting_line then
+            api_draw_text(x, y + spacing * (spacer - starting_line), line_out, false, col)
+        end
+        spacer = spacer + 1
     end
     return spacer * spacing
 end
@@ -183,7 +215,7 @@ function draw_tooltip(oid, menu_id)
         api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left - 1, top, 1, tooltip_size["y"], 0, 1, 1)
         api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left + tooltip_size["x"], top, 1, tooltip_size["y"], 0, 1, 1)
         api_draw_sprite_ext(TOOLTIP_CENTER_SPR, 0, left, top, tooltip_size["x"], tooltip_size["y"], 0, 0, 0.9)
-        draw_text_lines(text_to_draw, left + 3, top + 2, tooltip_size["x"] - 3)
+        draw_text_lines(text_to_draw, left + 3, top + 2, tooltip_size["x"] - 3, 0, 12)
         if #machines ~= 0 then
             draw_sprite_list(machines, left + 3, top + tooltip_size["y"] - 21)
         end
@@ -222,7 +254,7 @@ function draw_bee_tooltip(oid, menu_id)
         api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left - 1, top, 1, tooltip_size["y"], 0, 1, 1)
         api_draw_sprite_ext(TOOLTIP_EDGE_SPR, 0, left + tooltip_size["x"], top, 1, tooltip_size["y"], 0, 1, 1)
         api_draw_sprite_ext(TOOLTIP_CENTER_SPR, 0, left, top, tooltip_size["x"], tooltip_size["y"], 0, 0, 0.9)
-        draw_text_lines(text_to_draw, left + 3, top + 2, tooltip_size["x"] - 3)
+        draw_text_lines(text_to_draw, left + 3, top + 2, tooltip_size["x"] - 3, 0, 12)
         if #machines ~= 0 then
             draw_sprite_list(machines, left + 3, top + tooltip_size["y"] - 21)
         end
