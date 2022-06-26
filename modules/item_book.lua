@@ -14,6 +14,10 @@ function prep_recipe_book()
 end
 
 function create_recipe_book()
+    local old_recipe_books = api_all_menu_objects(MOD_NAME .. "_recipe_book")
+    for i=1,#old_recipe_books do
+        api_destroy_inst(old_recipe_books[i])
+    end
     api_create_obj(MOD_NAME .. "_recipe_book", 0, 0)
     api_library_add_book("recipe_book", "open_recipe_book", "sprites/recipe_book/recipe_book_button.png")
 end
@@ -57,7 +61,7 @@ function recipe_book_define(menu_id)
     api_dp(menu_id, "search_results", nil)
     api_dp(menu_id, "si_workstations", nil)
     api_dp(menu_id, "text_scroll", 0)
-    api_log("rb", "defining buttons ...")
+    --api_log("rb", "defining buttons ...")
     define_items_buttons(menu_id, 174, 25)
     for i=1,3 do
         api_define_button(menu_id, "recipe_item" .. i, 382 + (i - 1) * 23, 25, "", "item_click", "sprites/recipe_book/rb_slot.png")
@@ -72,7 +76,7 @@ function recipe_book_define(menu_id)
     api_define_button(menu_id, "text_up", 405, 243, "", "text_up", "sprites/recipe_book/rb_up.png")
     api_sp(api_gp(menu_id, "crafting_bench"), "index", 1)
     api_sp(api_gp(menu_id, "item_large"), "index", 1)
-    api_log("rb", "defined buttons !!")
+    --api_log("rb", "defined buttons !!")
     RB_MENU = menu_id
     local objs = api_get_menu_objects()
     for i=1,#objs do
@@ -287,7 +291,7 @@ function draw_npc_shop(selected_item, x, y)
 end
 
 function define_items_buttons(menu_id, tx, ty)
-    api_log("rb", "starting for loops ...")
+    --api_log("rb", "starting for loops ...")
     local spacing = {x = 23, y = 23}
     for by=1,9 do
         for bx=1,6 do
@@ -362,7 +366,8 @@ function type_char(menu_id, keycode)
             end
         end
     elseif pkey == "ENTER" then
-
+    elseif keycode == 16 then
+    elseif pkey == "CTRL" then
     elseif pkey == "LEFT" then
         move_cursor(menu_id, -1)
     elseif pkey == "RIGHT" then

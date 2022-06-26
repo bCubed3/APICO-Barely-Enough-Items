@@ -69,7 +69,7 @@ function register_bee(bee, stats, mod)
         --api_log(bee, stats["bid"])
         local bee_id = "bee_" .. stats["species"]
         if ITEM_REGISTRY[bee_id] == nil and is_blacklisted(bee_id) == false then
-            api_log(bee_id, stats["desc"])
+            --api_log(bee_id, stats["desc"])
             local recipe = {}
             if stats["requirement_combo"] ~= nil then
                 --api_log("rc", stats["requirement_combo"])
