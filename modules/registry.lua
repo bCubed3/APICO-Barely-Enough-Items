@@ -1,6 +1,7 @@
 --registry.lua
 
 MOD_REGISTRY = {}
+FAKE_ITEM_REGISTRY = {}
 ITEM_REGISTRY = {}
 ITEM_LIST = {}
 RECIPE_REGISTRY = {}
@@ -12,14 +13,16 @@ BLACKLISTED_ITEMS = {
     cube = ".",
     database = ".",
     tree = ".",
-    tapper = "."
+    tapper = ".",
+    butterfly = ".",
+    caterpiller = "."
 }
 BLACKLISTED_PATTERNS = {
     "npc%d+s",
     "seedling%d+",
     "inventory_%a"
 }
-CUBE_SPR = 692
+CUBE_SPR = 910
 
 function register_mod(mod_id, mod_name)
     mod_name =  mod_name or mod_id
@@ -47,10 +50,13 @@ function register_item(oid, mod, itype)
     if ITEM_REGISTRY[oid] == nil and is_blacklisted(oid) == false then
         local idef = api_get_definition(oid)
         if idef ~= nil then
-            if oid == "npc1" then
-                register_npc(oid)
+            if oid == "butterfly" then
+                api_log("bei", idef)
             end
             ITEM_REGISTRY[oid] = {sprite = api_get_sprite("sp_" .. oid), name = idef["name"], mod = mod, itype = itype, tooltip = idef["tooltip"]}
+            if idef["name"] == nil then
+                ITEM_REGISTRY[oid]["name"] = oid
+            end
             local small_item = api_get_sprite("sp_" .. oid .. "_item")
             if small_item ~= CUBE_SPR then
                 ITEM_REGISTRY[oid]["sprite"] = small_item
@@ -131,6 +137,9 @@ function register_npcs()
 end
 
 function register_items()
+    -- register dummy items
+    FAKE_ITEM_REGISTRY["mouse1"] = {sprite = api_get_sprite("mouse1")}
+
     local vanilla_items = api_describe_oids(false)
     for i=1,#vanilla_items do
         register_item(vanilla_items[i], "vanilla", "item")

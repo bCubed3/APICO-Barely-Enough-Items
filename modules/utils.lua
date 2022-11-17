@@ -155,21 +155,35 @@ function draw_text_lines(text_lines, x, y, width, starting_line, num_lines)
     return spacer * spacing
 end
 
+function get_reg_sprite(oid)
+    if FAKE_ITEM_REGISTRY[oid] ~= nil then
+        return FAKE_ITEM_REGISTRY[oid]["sprite"]
+    else
+        return ITEM_REGISTRY[oid]["sprite"]
+    end
+end
+
 function draw_sprite_list(oids, x, y)
     local spacing = 3
     for i=1,#oids do
         api_draw_sprite(TOOLTIP_ITEM_BG_SPR, 0, x + (18 + spacing) * (i - 1), y)
-        api_draw_sprite(ITEM_REGISTRY[oids[i]]["sprite"], 0, x + (18 + spacing) * (i - 1) + 1, y + 1)
+        api_draw_sprite(get_reg_sprite(oids[i]), 0, x + (18 + spacing) * (i - 1) + 1, y + 1)
     end
 end
 
 function draw_tooltip(oid, menu_id)
 	local idef = api_get_definition(oid)
     if idef ~= nil then
-        local name = idef["name"]
+        local name = idef["name"] or oid
         local durability = idef["durability"]
         local sell_price = idef["cost"]
         local machines = idef["machines"]
+        if #machines ~= 0 then
+            for m=1, #machines do
+                machines[m] = machines[m]
+            end
+        end
+        --api_log("bei", machines)
         if type(sell_price) == "table" then
             sell_price = sell_price["sell"]
         else
@@ -259,4 +273,12 @@ function draw_bee_tooltip(oid, menu_id)
             draw_sprite_list(machines, left + 3, top + tooltip_size["y"] - 21)
         end
     end
+end
+
+function trim(s)
+    if type(s) == "string" then
+        --api_log("bei", s .. ", " .. #s)
+        return string.gsub(s, "^%s*(.-)%s*$", "%1")
+    end
+    return s
 end

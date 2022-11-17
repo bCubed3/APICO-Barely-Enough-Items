@@ -86,6 +86,7 @@ function recipe_book_define(menu_id)
     end
 end
 
+-- draw the book itself
 function draw_book(menu_id)
     local menu = api_get_inst(menu_id)
     if menu ~= nil then
@@ -127,6 +128,7 @@ function draw_book(menu_id)
     end
 end
 
+-- draw information about the item, for ALL TYPES OF ITEM
 function draw_info(menu_id, x, y, selected_item, recipe, text)
     if selected_item ~= nil then
         --local idef = api_get_definition(selected_item)
@@ -136,6 +138,8 @@ function draw_info(menu_id, x, y, selected_item, recipe, text)
         if recipe ~= nil then
             api_draw_button(api_gp(menu_id, "crafting_bench"), false)
             api_draw_sprite(RB_CRAFT_ARROW, 0, x + 42, y + 18)
+            -- draw the 3 recipe items
+            -- the workstation is drawn elsewhere (rotating_workstation)
             for i=1,3 do
                 local ri_button = api_gp(menu_id, "recipe_item" .. i)
                 api_draw_button(ri_button, false)
@@ -191,6 +195,7 @@ function draw_info(menu_id, x, y, selected_item, recipe, text)
     end
 end
 
+-- default draw call for items (calls draw_info)
 function draw_item_info(menu_id, x, y)
     local selected_item = api_gp(menu_id, "selected_item")
     if selected_item ~= nil then
@@ -198,7 +203,7 @@ function draw_item_info(menu_id, x, y)
         local text_to_draw = {}
         if idef ~= nil then
             text_to_draw = {
-                {text = idef["name"], color = "FONT_BOOK"},
+                {text = idef["name"] or selected_item, color = "FONT_BOOK"},
                 {text = MOD_REGISTRY[ITEM_REGISTRY[selected_item]["mod"]], color = "FONT_ORANGE"},
                 {text = idef["category"], color = "FONT_BLUE"},
                 {text = idef["tooltip"], color = "FONT_BOOK"},
@@ -229,6 +234,7 @@ function draw_item_info(menu_id, x, y)
     end
 end
 
+-- separate info draw for npcs
 function draw_npc_info(menu_id, x, y)
     local selected_item = api_gp(menu_id, "selected_item")
     if selected_item ~= nil then
@@ -248,6 +254,7 @@ function draw_npc_info(menu_id, x, y)
     end
 end
 
+-- separate info draw for bees
 function draw_bee_info(menu_id, x, y)
     local selected_item = api_gp(menu_id, "selected_item")
     if selected_item ~= nil then
@@ -270,6 +277,7 @@ function draw_bee_info(menu_id, x, y)
     end
 end
 
+-- draw the items sold by npcs (currently does not work with rotating stock)
 function draw_npc_shop(selected_item, x, y)
     local item = ""
     local price = ""
@@ -301,6 +309,7 @@ function define_items_buttons(menu_id, tx, ty)
     end
 end
 
+-- draw buttons for items in search preview
 function draw_item_buttons(menu_id)
     for y=1,9 do
         for x=1,6 do
@@ -309,6 +318,7 @@ function draw_item_buttons(menu_id)
     end
 end
 
+-- draw sprites in search preview
 function draw_item_sprites(menu_id, tx, ty)
     local spacing = {x = 23, y = 23}
     for y=1,9 do
@@ -340,7 +350,7 @@ function set_button_text(menu_id, filtered_item_list)
 end
 
 function type_char(menu_id, keycode)
-    api_log("keycode", keycode)
+    --api_log("keycode", keycode)
     api_sp(menu_id, "bei_scroll", 0)
     local pkey = -1
     if api_get_key_down("SHFT") == 1 then
