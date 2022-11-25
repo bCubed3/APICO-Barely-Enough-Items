@@ -71,6 +71,7 @@ function register_item(oid, mod, itype)
 end
 
 function register_bee(bee, stats, mod)
+    --api_log(bee, stats)
     if string.sub(bee, 1, 1) ~= "_" and string.match(bee, "intro%d") == nil then
         --api_log(bee, stats["bid"])
         local bee_id = "bee_" .. stats["species"]
@@ -101,6 +102,57 @@ function register_bee(bee, stats, mod)
             }
             --api_log(bee, "bee defined !")
             register_recipe(stats["product"], {{item = bee_id, amount = 1}}, 1, mod, {"hive1", "hive2"})
+        end
+    end
+end
+
+function register_butterfly(bfly, stats, mod)
+    --api_log(bfly, stats)
+    if string.sub(bfly, 1, 1) ~= "_" and string.match(bfly, "intro%d") == nil then
+        --api_log(bee, stats["bid"])
+        local bfly_id = "bfly_" .. stats["species"]
+        if ITEM_REGISTRY[bfly_id] == nil and is_blacklisted(bfly_id) == false then
+            --api_log(bee_id, stats["desc"])
+            local recipe = {}
+            --[[if stats["requirement_combo"] ~= nil then
+                --api_log("rc", stats["requirement_combo"])
+                for k,v in pairs(stats["requirement_combo"]) do
+                    table.insert(recipe, {item = "bfly_" .. v, amount = 1})
+                end
+                --if #recipe > 0 then
+                --    register_recipe(bfly_id, recipe, 1, mod, {"hive1", "hive2", "hive3"})
+                --end
+            end]]--
+            local _desc = ""
+            local _effect_desc = ""
+            if type(stats["desc"]) == "table" then
+                _desc = stats["desc"][1]["text"]
+            end
+            if type(stats["effect_desc"]) == "table" then
+                _effect_desc = stats["effect_desc"][1]["text"]
+            end
+            ITEM_REGISTRY[bfly_id] = {
+                sprite = api_get_sprite("sp_butterfly_" .. bfly),
+                name = stats["title"] .. " Butterfly",
+                title = stats["title"],
+                mod = mod,
+                itype = "butterfly",
+                req = stats["requirement"],
+                product = stats["product"],
+                desc = _desc,
+                biome = stats["biome"],
+                effect_desc = _effect_desc,
+                flora = stats["flora"],
+                behavior = stats["behaviour"],
+                pluviophile = stats["pluviophile"],
+                flowers = stats["flowers"],
+                climate = stats["climate"],
+                tier = stats["tier"],
+                latin = stats["latin"],
+                chionophile = stats["chionophile"]
+            }
+            --api_log(bee, "bee defined !")
+            --register_recipe(stats["product"], {{item = bee_id, amount = 1}}, 1, mod, {"hive1", "hive2"})
         end
     end
 end
@@ -163,6 +215,13 @@ function register_bees()
         for bee,stats in pairs(bees) do
             register_bee(bee, stats, mod)
         end
+    end
+end
+
+function register_butterflies()
+    local vanilla_butterflies = api_describe_butterflies(false)
+    for bfly, stats in pairs(vanilla_butterflies) do
+        register_butterfly(bfly, stats, "vanilla")
     end
 end
 

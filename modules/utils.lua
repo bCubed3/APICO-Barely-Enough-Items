@@ -116,6 +116,8 @@ function get_lines_height(text_lines, width)
     for i=1,#text_lines do
         if text_lines[i]["text"] ~= nil then
             spacer = spacer + get_string_height(text_lines[i]["text"], width)
+        elseif text_lines[i]["spr"] ~= nil then
+            spacer = spacer + 1
         end
     end
     return spacer
@@ -126,31 +128,40 @@ function draw_text_lines(text_lines, x, y, width, starting_line, num_lines)
     local spacing = 13
     local spacer = 0
     for i=1,#text_lines do
-        local str = text_lines[i]["text"]
-        local col = text_lines[i]["color"]
-        local out = 0
-        local line_length = 0
-        local word_length = 0
-        local line_out = ""
-        for word in string.gmatch(str, "%S+") do
-            word_length = get_string_px(word) + 3
-            if line_length + word_length < width - 3 then
-                line_length = line_length + word_length
-                line_out = line_out .. word .. " "
-            else
-                if starting_line <= spacer and spacer <= num_lines + starting_line then
-                    api_draw_text(x, y + spacing * (spacer - starting_line), line_out, false, col)
+        -- if line is text
+        if text_lines[i]["text"] ~= nil then
+            local str = text_lines[i]["text"]
+            local col = text_lines[i]["color"]
+            local out = 0
+            local line_length = 0
+            local word_length = 0
+            local line_out = ""
+            for word in string.gmatch(str, "%S+") do
+                word_length = get_string_px(word) + 3
+                if line_length + word_length < width - 3 then
+                    line_length = line_length + word_length
+                    line_out = line_out .. word .. " "
+                else
+                    if starting_line <= spacer and spacer <= num_lines + starting_line then
+                        api_draw_text(x, y + spacing * (spacer - starting_line), line_out, false, col)
+                    end
+                    spacer = spacer + 1
+                    line_out = word .. " "
+                    line_length = word_length
+                    out = out + 1
                 end
-                spacer = spacer + 1
-                line_out = word .. " "
-                line_length = word_length
-                out = out + 1
             end
+            if starting_line <= spacer and spacer <= num_lines + starting_line then
+                api_draw_text(x, y + spacing * (spacer - starting_line), line_out, false, col)
+            end
+            spacer = spacer + 1
+        elseif text_lines[i]["spr"] ~= nil then
+            if starting_line <= spacer and spacer <= num_lines + starting_line then
+                --api_draw_sprite(get_reg_sprite("log"), 1, x, y + spacing * (spacer - starting_line) - 2)
+                draw_sprite_list(text_lines[i]["spr"], x, y + spacing * (spacer - starting_line) - 4, false)
+            end
+            spacer = spacer + 1
         end
-        if starting_line <= spacer and spacer <= num_lines + starting_line then
-            api_draw_text(x, y + spacing * (spacer - starting_line), line_out, false, col)
-        end
-        spacer = spacer + 1
     end
     return spacer * spacing
 end
@@ -158,15 +169,22 @@ end
 function get_reg_sprite(oid)
     if FAKE_ITEM_REGISTRY[oid] ~= nil then
         return FAKE_ITEM_REGISTRY[oid]["sprite"]
-    else
+    elseif ITEM_REGISTRY[oid] ~= nil and ITEM_REGISTRY[oid]["sprite"] ~= nil then
         return ITEM_REGISTRY[oid]["sprite"]
+    else
+        return CUBE_SPR
     end
 end
 
-function draw_sprite_list(oids, x, y)
+function draw_sprite_list(oids, x, y, bg)
+    if bg == nil then
+        bg = true
+    end
     local spacing = 3
     for i=1,#oids do
-        api_draw_sprite(TOOLTIP_ITEM_BG_SPR, 0, x + (18 + spacing) * (i - 1), y)
+        if bg then
+            api_draw_sprite(TOOLTIP_ITEM_BG_SPR, 0, x + (18 + spacing) * (i - 1), y)
+        end
         api_draw_sprite(get_reg_sprite(oids[i]), 0, x + (18 + spacing) * (i - 1) + 1, y + 1)
     end
 end

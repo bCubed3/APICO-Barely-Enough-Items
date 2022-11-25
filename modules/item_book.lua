@@ -27,7 +27,7 @@ function open_recipe_book()
 end
 
 function define_recipe_book()
-    api_define_menu_object({
+    api_define_menu_object2({
         id = "recipe_book",
         name = "Recipe_Book",
         define = "define_book",
@@ -76,7 +76,6 @@ function recipe_book_define(menu_id)
     api_define_button(menu_id, "text_up", 405, 243, "", "text_up", "sprites/recipe_book/rb_up.png")
     api_sp(api_gp(menu_id, "crafting_bench"), "index", 1)
     api_sp(api_gp(menu_id, "item_large"), "index", 1)
-    --api_log("rb", "defined buttons !!")
     RB_MENU = menu_id
     local objs = api_get_menu_objects()
     for i=1,#objs do
@@ -94,7 +93,7 @@ function draw_book(menu_id)
         local mx = math.floor(menu["x"] - cam["x"])
         local my = math.floor(menu["y"] - cam["y"])
         local search_box_pos = {x = 20, y = 28}
-        local sb_width = 126
+        --local sb_width = 126
         api_draw_sprite(menu["sprite_index"], 0, mx, my)
         local search_text = api_gp(menu_id, "search")
         local cursor_index = api_gp(menu_id, "cursor_index")
@@ -116,6 +115,8 @@ function draw_book(menu_id)
                 draw_npc_info(menu_id, mx + 334 + 4, my + 25 + 4)
             elseif ITEM_REGISTRY[selected_item]["itype"] == "bee" then
                 draw_bee_info(menu_id, mx + 334 + 4, my + 25 + 4)
+            elseif ITEM_REGISTRY[selected_item]["itype"] == "butterfly" then
+                draw_butterfly_info(menu_id, mx + 334 + 4, my + 25 + 4)
             else
                 draw_item_info(menu_id, mx + 334 + 4, my + 25 + 4)
             end
@@ -158,7 +159,7 @@ function draw_info(menu_id, x, y, selected_item, recipe, text)
                 end
             end
         end
-        if ITEM_REGISTRY[selected_item]["itype"] == "bee" then
+        if ITEM_REGISTRY[selected_item]["itype"] == "bee" or ITEM_REGISTRY[selected_item]["itype"] == "butterfly" then
             api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x - 2, y - 2, 2, 2, 0, 0, 1)
         else
             api_draw_sprite_ext(ITEM_REGISTRY[selected_item]["sprite"], 0, x, y, 2, 2, 0, 0, 1)
@@ -277,6 +278,38 @@ function draw_bee_info(menu_id, x, y)
     end
 end
 
+-- draw separate info for butterflies
+function draw_butterfly_info(menu_id, x, y)
+    local selected_item = api_gp(menu_id, "selected_item")
+    if selected_item ~= nil then
+        local idef = ITEM_REGISTRY[selected_item]
+        local text_to_draw = {}
+        if idef ~= nil then
+            --api_log("desc", idef["desc"])
+            local enjoys_rain = "does not enjoy"
+            if idef["pluviophile"] == 1 then
+                enjoys_rain = "enjoys"
+            end
+            text_to_draw = {
+                {text = idef["name"], color = "FONT_BOOK"},
+                {text = MOD_REGISTRY[ITEM_REGISTRY[selected_item]["mod"]], color = "FONT_ORANGE"},
+                {text = "Tier " .. math.floor(idef["tier"]) .. " Butterfly", color = "FONT_BLUE"},
+                {text = "Flowers:", color = "FONT_RED"},
+                {spr = idef["flowers"]},
+                {text = "Flora:", color = "FONT_RED"},
+                {spr = {idef["flora"]}},
+                {text = idef["desc"], color = "FONT_BOOK"},
+                {text = "The " .. idef["title"] .. " butterfly exhibits " .. string.lower(idef["behavior"]) .. " behaviour and " .. enjoys_rain .. " the rain. It prefers a " .. string.lower(idef["climate"]) .. " climate and can be found in the " .. string.lower(idef["biome"]) .. " biome.", color = "FONT_GREY"},
+                {text = "oid : " .. selected_item, color = "FONT_GREY"}
+            }
+            if idef["req"] ~= nil and idef["req"] ~= "" then
+                table.insert(text_to_draw, 5, {text = "Bred : " .. idef["req"], color = "FONT_BOOK"})
+            end
+        end
+        local text_height = draw_info(menu_id, x, y, selected_item, RECIPE_REGISTRY[selected_item], text_to_draw)
+    end
+end
+
 -- draw the items sold by npcs (currently does not work with rotating stock)
 function draw_npc_shop(selected_item, x, y)
     local item = ""
@@ -325,7 +358,7 @@ function draw_item_sprites(menu_id, tx, ty)
         for x=1,6 do
             local item_name = api_gp(api_gp(menu_id, "item_button" .. (6 * (y - 1) + x)), "text")
             if item_name ~= "" then
-                if ITEM_REGISTRY[item_name]["itype"] == "bee" then
+                if ITEM_REGISTRY[item_name]["itype"] == "bee" or ITEM_REGISTRY[item_name]["itype"] == "butterfly" then
                     api_draw_sprite(ITEM_REGISTRY[item_name]["sprite"], 0, tx + (x - 1) * spacing["x"] - 1, ty + (y - 1) * spacing["y"] - 1)
                 else
                     api_draw_sprite(ITEM_REGISTRY[item_name]["sprite"], 0, tx + (x - 1) * spacing["x"], ty + (y - 1) * spacing["y"])
