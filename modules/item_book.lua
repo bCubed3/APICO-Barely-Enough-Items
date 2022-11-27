@@ -4,6 +4,8 @@ RB_CURSOR_SPR = -1
 RB_SLOT_SPR = -1
 TEXTBOX_SIZE = 122
 RB_MENU = -1
+SEARCH_BOX_POS = {x = 20, y = 28}
+SEARCH_BOX_SIZE = {x = 135, y = 19}
 
 
 function prep_recipe_book()
@@ -41,7 +43,7 @@ function define_recipe_book()
         buttons = {"Close", "Move"},
         info = {},
         tools = {"mouse1", "hammer1"},
-        placeable = true,
+        placeable = false,
         invisible = true
     }, "sprites/recipe_book/recipe_book.png", "sprites/recipe_book/recipe_book_gui.png", {
         define = "recipe_book_define",
@@ -61,6 +63,7 @@ function recipe_book_define(menu_id)
     api_dp(menu_id, "search_results", nil)
     api_dp(menu_id, "si_workstations", nil)
     api_dp(menu_id, "text_scroll", 0)
+    api_dp(menu_id, "textbox_focused", false)
     --api_log("rb", "defining buttons ...")
     define_items_buttons(menu_id, 174, 25)
     for i=1,3 do
@@ -92,7 +95,6 @@ function draw_book(menu_id)
         local cam = api_get_cam()
         local mx = math.floor(menu["x"] - cam["x"])
         local my = math.floor(menu["y"] - cam["y"])
-        local search_box_pos = {x = 20, y = 28}
         --local sb_width = 126
         api_draw_sprite(menu["sprite_index"], 0, mx, my)
         local search_text = api_gp(menu_id, "search")
@@ -101,11 +103,13 @@ function draw_book(menu_id)
         local display_start = api_gp(menu_id, "display_start")
         local display_end = api_gp(menu_id, "display_end")
         search_text = string.sub(search_text, display_start, display_end)
-        api_draw_text(mx + search_box_pos["x"], my + search_box_pos["y"], search_text, false, "FONT_GREY", nil)
+        api_draw_text(mx + SEARCH_BOX_POS["x"], my + SEARCH_BOX_POS["y"], search_text, false, "FONT_GREY", nil)
         local cursor_px = get_string_px(string.sub(search_text, 1, cursor_relative))
         --api_log("cpx", cursor_px)
         -- draw search bar cursor
-        api_draw_sprite(RB_CURSOR_SPR, 1, mx + search_box_pos["x"] + cursor_px, my + search_box_pos["y"])
+        if api_gp(menu_id, "textbox_focused") then
+            api_draw_sprite(RB_CURSOR_SPR, 1, mx + SEARCH_BOX_POS["x"] + cursor_px, my + SEARCH_BOX_POS["y"])
+        end
         draw_item_buttons(menu_id)
         draw_item_sprites(menu_id, mx + 174 + 2, my + 25 + 2)
         draw_hovered_item_tooltip(menu_id)
@@ -380,6 +384,10 @@ function set_button_text(menu_id, filtered_item_list)
             api_sp(api_gp(menu_id, "item_button" .. i), "text", "")
         end
     end
+end
+
+function focus_textbox(focus)
+    TEXT_BOX_FOCUSED = focus
 end
 
 function type_char(menu_id, keycode)
